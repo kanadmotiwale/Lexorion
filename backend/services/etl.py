@@ -2,15 +2,11 @@ import os
 import uuid
 import tiktoken
 import fitz  # PyMuPDF
-from openai import OpenAI
-from dotenv import load_dotenv
+import requests
 from typing import List, Dict
 
-load_dotenv()
-
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
-EMBEDDING_MODEL = "text-embedding-3-small"
+OLLAMA_BASE_URL = "http://localhost:11434"
+EMBEDDING_MODEL = "nomic-embed-text"
 CHUNK_SIZE = 512
 CHUNK_OVERLAP = 64
 encoding = tiktoken.get_encoding("cl100k_base")
@@ -21,10 +17,8 @@ encoding = tiktoken.get_encoding("cl100k_base")
 def count_tokens(text: str) -> int:
     return len(encoding.encode(text))
 
-
 def tokenize(text: str) -> List[int]:
     return encoding.encode(text)
-
 
 def decode_tokens(tokens: List[int]) -> str:
     return encoding.decode(tokens)
@@ -39,11 +33,9 @@ def parse_pdf(file_path: str) -> str:
         text += page.get_text()
     return text.strip()
 
-
 def parse_text(file_path: str) -> str:
     with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
         return f.read().strip()
-
 
 def parse_file(file_path: str, file_type: str) -> str:
     if file_type == "pdf":
@@ -83,28 +75,23 @@ def chunk_text(text: str, document_id: str) -> List[Dict]:
 
 # --- Embed ---
 
+def embed_single(text: str) -> List[float]:
+    response = requests.post(
+        f"{OLLAMA_BASE_URL}/api/embeddings",
+        json={"model": EMBEDDING_MODEL, "prompt": text}
+    )
+    response.raise_for_status()
+    return response.json()["embedding"]
+
 def embed_texts(texts: List[str]) -> List[List[float]]:
-    batch_size = 100
-    all_embeddings = []
-
-    for i in range(0, len(texts), batch_size):
-        batch = texts[i:i + batch_size]
-        response = client.embeddings.create(
-            model=EMBEDDING_MODEL,
-            input=batch
-        )
-        batch_embeddings = [item.embedding for item in response.data]
-        all_embeddings.extend(batch_embeddings)
-
-    return all_embeddings
-
+    embeddings = []
+    for text in texts:
+        embedding = embed_single(text)
+        embeddings.append(embedding)
+    return embeddings
 
 def embed_query(query: str) -> List[float]:
-    response = client.embeddings.create(
-        model=EMBEDDING_MODEL,
-        input=[query]
-    )
-    return response.data[0].embedding
+    return embed_single(query)
 
 
 # --- Full ETL pipeline ---
@@ -123,7 +110,7 @@ def run_etl(file_path: str, file_type: str, document_id: str) -> List[Dict]:
     texts = [chunk["text"] for chunk in chunks]
     embeddings = embed_texts(texts)
 
-    # 4. Attach embeddings to chunks
+    # 4. Attach embeddings
     for i, chunk in enumerate(chunks):
         chunk["embedding"] = embeddings[i]
 

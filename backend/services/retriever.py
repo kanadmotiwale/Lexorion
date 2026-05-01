@@ -8,7 +8,7 @@ from services.etl import embed_query
 
 FAISS_INDEX_PATH = "faiss_index/index.faiss"
 METADATA_PATH = "faiss_index/metadata.pkl"
-EMBEDDING_DIM = 1536  # text-embedding-3-small dimension
+EMBEDDING_DIM = 768  # text-embedding-3-small dimension
 
 
 # --- Init ---

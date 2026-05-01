@@ -1,33 +1,28 @@
-import os
-from openai import OpenAI
+import json
+import requests
 from pydantic import BaseModel, Field
 from typing import List, Dict, Optional
-from dotenv import load_dotenv
 
-load_dotenv()
-
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
-EVAL_MODEL = "gpt-4o-mini"
+OLLAMA_BASE_URL = "http://localhost:11434"
+EVAL_MODEL = "llama3.2"
 
 
-# --- Pydantic models for structured evaluation ---
+# --- Pydantic models ---
 
 class ChunkRelevance(BaseModel):
     chunk_index: int
     relevance_score: float = Field(ge=0.0, le=1.0)
     reason: str
 
-
 class EvaluationResult(BaseModel):
     is_answerable: bool
     overall_confidence: float = Field(ge=0.0, le=1.0)
-    answer_quality: str  # "high" | "medium" | "low"
+    answer_quality: str
     chunk_relevances: List[ChunkRelevance]
     suggested_answer_focus: Optional[str] = None
 
 
-# --- Evaluator agent ---
+# --- Evaluator ---
 
 def evaluate_retrieval(
     question: str,
@@ -43,7 +38,6 @@ def evaluate_retrieval(
             suggested_answer_focus=None,
         )
 
-    # Build evaluation prompt
     chunks_text = ""
     for i, chunk in enumerate(chunks):
         chunks_text += (
@@ -52,7 +46,7 @@ def evaluate_retrieval(
         )
 
     eval_prompt = f"""You are an evaluation agent for a RAG system called Lexorion.
-Your job is to assess the quality of retrieved chunks and the generated answer.
+Assess the quality of retrieved chunks and the generated answer.
 
 QUESTION: {question}
 
@@ -62,93 +56,79 @@ RETRIEVED CHUNKS:
 GENERATED ANSWER:
 {answer}
 
-Evaluate and respond in this exact JSON format:
+Respond in this exact JSON format only, no extra text:
 {{
-  "is_answerable": true or false,
-  "overall_confidence": 0.0 to 1.0,
-  "answer_quality": "high" or "medium" or "low",
+  "is_answerable": true,
+  "overall_confidence": 0.85,
+  "answer_quality": "high",
   "chunk_relevances": [
     {{
       "chunk_index": 0,
-      "relevance_score": 0.0 to 1.0,
-      "reason": "brief reason"
+      "relevance_score": 0.9,
+      "reason": "directly answers the question"
     }}
   ],
-  "suggested_answer_focus": "optional suggestion or null"
-}}
+  "suggested_answer_focus": null
+}}"""
 
-Respond with JSON only. No extra text."""
-
-    response = client.chat.completions.create(
-        model=EVAL_MODEL,
-        messages=[
-            {
-                "role": "system",
-                "content": "You are a precise RAG evaluation agent. Respond only with valid JSON."
-            },
-            {
-                "role": "user",
-                "content": eval_prompt
-            }
-        ],
-        temperature=0.0,
-        max_tokens=800,
+    response = requests.post(
+        f"{OLLAMA_BASE_URL}/api/generate",
+        json={
+            "model": EVAL_MODEL,
+            "prompt": eval_prompt,
+            "stream": False,
+            "options": {"temperature": 0.0, "num_predict": 600}
+        }
     )
+    response.raise_for_status()
+    raw = response.json()["response"].strip()
 
-    raw = response.choices[0].message.content.strip()
-
-    # Strip markdown code fences if present
-    if raw.startswith("```"):
+    # Strip markdown fences if present
+    if "```" in raw:
         raw = raw.split("```")[1]
         if raw.startswith("json"):
             raw = raw[4:]
         raw = raw.strip()
 
-    import json
+    # Extract JSON object
+    start = raw.find("{")
+    end = raw.rfind("}") + 1
+    if start != -1 and end > start:
+        raw = raw[start:end]
+
     data = json.loads(raw)
     return EvaluationResult(**data)
 
 
 # --- Re-ranker ---
 
-def rerank_chunks(
-    chunks: List[Dict],
-    evaluation: EvaluationResult
-) -> List[Dict]:
+def rerank_chunks(chunks: List[Dict], evaluation: EvaluationResult) -> List[Dict]:
     if not evaluation.chunk_relevances:
         return chunks
 
-    # Build a score map from evaluator
     relevance_map = {
         cr.chunk_index: cr.relevance_score
         for cr in evaluation.chunk_relevances
     }
 
-    # Combine FAISS score with evaluator score
     for i, chunk in enumerate(chunks):
         faiss_score = chunk.get("score", 0.0)
         eval_score = relevance_map.get(i, 0.5)
         chunk["combined_score"] = (faiss_score * 0.5) + (eval_score * 0.5)
 
-    # Sort by combined score descending
-    reranked = sorted(chunks, key=lambda x: x["combined_score"], reverse=True)
-    return reranked
+    return sorted(chunks, key=lambda x: x["combined_score"], reverse=True)
 
 
-# --- Full evaluation pipeline ---
+# --- Full pipeline ---
 
 def run_evaluation_pipeline(
     question: str,
     chunks: List[Dict],
     answer: str
 ) -> Dict:
-    # Step 1: Evaluate
     evaluation = evaluate_retrieval(question, chunks, answer)
-
-    # Step 2: Re-rank chunks
     reranked_chunks = rerank_chunks(chunks, evaluation)
 
-    # Step 3: Adjust confidence based on evaluation
     adjusted_confidence = round(
         (evaluation.overall_confidence * 0.6) +
         (reranked_chunks[0].get("score", 0.0) * 0.4)
