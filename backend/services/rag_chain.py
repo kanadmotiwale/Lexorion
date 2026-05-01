@@ -1,22 +1,22 @@
-import requests
+import os
+from groq import Groq
 from typing import List, Dict
+from dotenv import load_dotenv
 
-OLLAMA_BASE_URL = "http://localhost:11434"
-LLM_MODEL = "llama3.2"
+load_dotenv()
+
+client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+LLM_MODEL = "llama-3.1-8b-instant"
 MAX_CONTEXT_TOKENS = 3000
 
 
-# --- Prompt builder ---
-
 def build_prompt(question: str, chunks: List[Dict]) -> str:
     context_parts = []
-
     for i, chunk in enumerate(chunks):
         context_parts.append(
             f"[Source {i+1}] File: {chunk.get('filename', 'unknown')} | "
             f"Chunk {chunk['chunk_index']}\n{chunk['text']}"
         )
-
     context = "\n\n---\n\n".join(context_parts)
 
     return f"""You are Lexorion, an intelligent knowledge assistant.
@@ -33,17 +33,12 @@ QUESTION:
 ANSWER:"""
 
 
-# --- Confidence score ---
-
 def calculate_confidence(chunks: List[Dict]) -> float:
     if not chunks:
         return 0.0
     scores = [chunk.get("score", 0.0) for chunk in chunks]
-    avg_score = sum(scores) / len(scores)
-    return round(min(max(avg_score, 0.0), 1.0), 2)
+    return round(min(max(sum(scores) / len(scores), 0.0), 1.0), 2)
 
-
-# --- Truncate context ---
 
 def truncate_chunks(chunks: List[Dict], max_tokens: int = MAX_CONTEXT_TOKENS) -> List[Dict]:
     total_tokens = 0
@@ -56,8 +51,6 @@ def truncate_chunks(chunks: List[Dict], max_tokens: int = MAX_CONTEXT_TOKENS) ->
         total_tokens += chunk_tokens
     return truncated
 
-
-# --- Main RAG function ---
 
 def run_rag_chain(
     question: str,
@@ -79,21 +72,23 @@ def run_rag_chain(
     chunks = truncate_chunks(chunks)
     prompt = build_prompt(question, chunks)
 
-    # Call Ollama
-    response = requests.post(
-        f"{OLLAMA_BASE_URL}/api/generate",
-        json={
-            "model": LLM_MODEL,
-            "prompt": prompt,
-            "stream": False,
-            "options": {
-                "temperature": 0.2,
-                "num_predict": 1000,
+    response = client.chat.completions.create(
+        model=LLM_MODEL,
+        messages=[
+            {
+                "role": "system",
+                "content": "You are Lexorion, a precise and helpful document knowledge assistant."
+            },
+            {
+                "role": "user",
+                "content": prompt
             }
-        }
+        ],
+        temperature=0.2,
+        max_tokens=1000,
     )
-    response.raise_for_status()
-    answer = response.json()["response"].strip()
+
+    answer = response.choices[0].message.content.strip()
     confidence = calculate_confidence(chunks)
 
     sources = []

@@ -1,18 +1,17 @@
 import os
 import uuid
 import tiktoken
-import fitz  # PyMuPDF
-import requests
+import fitz
+from sentence_transformers import SentenceTransformer
 from typing import List, Dict
 
-OLLAMA_BASE_URL = "http://localhost:11434"
-EMBEDDING_MODEL = "nomic-embed-text"
+EMBEDDING_MODEL_NAME = "all-MiniLM-L6-v2"
 CHUNK_SIZE = 512
 CHUNK_OVERLAP = 64
+
 encoding = tiktoken.get_encoding("cl100k_base")
+embedding_model = SentenceTransformer(EMBEDDING_MODEL_NAME)
 
-
-# --- Tokenize ---
 
 def count_tokens(text: str) -> int:
     return len(encoding.encode(text))
@@ -23,8 +22,6 @@ def tokenize(text: str) -> List[int]:
 def decode_tokens(tokens: List[int]) -> str:
     return encoding.decode(tokens)
 
-
-# --- Parse ---
 
 def parse_pdf(file_path: str) -> str:
     doc = fitz.open(file_path)
@@ -45,8 +42,6 @@ def parse_file(file_path: str, file_type: str) -> str:
     else:
         raise ValueError(f"Unsupported file type: {file_type}")
 
-
-# --- Chunk ---
 
 def chunk_text(text: str, document_id: str) -> List[Dict]:
     tokens = tokenize(text)
@@ -73,44 +68,25 @@ def chunk_text(text: str, document_id: str) -> List[Dict]:
     return chunks
 
 
-# --- Embed ---
-
-def embed_single(text: str) -> List[float]:
-    response = requests.post(
-        f"{OLLAMA_BASE_URL}/api/embeddings",
-        json={"model": EMBEDDING_MODEL, "prompt": text}
-    )
-    response.raise_for_status()
-    return response.json()["embedding"]
-
 def embed_texts(texts: List[str]) -> List[List[float]]:
-    embeddings = []
-    for text in texts:
-        embedding = embed_single(text)
-        embeddings.append(embedding)
-    return embeddings
+    embeddings = embedding_model.encode(texts, show_progress_bar=False)
+    return embeddings.tolist()
 
 def embed_query(query: str) -> List[float]:
-    return embed_single(query)
+    embedding = embedding_model.encode([query], show_progress_bar=False)
+    return embedding[0].tolist()
 
-
-# --- Full ETL pipeline ---
 
 def run_etl(file_path: str, file_type: str, document_id: str) -> List[Dict]:
-    # 1. Parse
     raw_text = parse_file(file_path, file_type)
 
     if not raw_text:
         raise ValueError("Could not extract text from file")
 
-    # 2. Chunk
     chunks = chunk_text(raw_text, document_id)
-
-    # 3. Embed
     texts = [chunk["text"] for chunk in chunks]
     embeddings = embed_texts(texts)
 
-    # 4. Attach embeddings
     for i, chunk in enumerate(chunks):
         chunk["embedding"] = embeddings[i]
 

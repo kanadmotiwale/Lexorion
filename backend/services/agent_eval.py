@@ -1,13 +1,15 @@
+import os
 import json
-import requests
+from groq import Groq
 from pydantic import BaseModel, Field
 from typing import List, Dict, Optional
+from dotenv import load_dotenv
 
-OLLAMA_BASE_URL = "http://localhost:11434"
-EVAL_MODEL = "llama3.2"
+load_dotenv()
 
+client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+EVAL_MODEL = "llama-3.1-8b-instant"
 
-# --- Pydantic models ---
 
 class ChunkRelevance(BaseModel):
     chunk_index: int
@@ -21,8 +23,6 @@ class EvaluationResult(BaseModel):
     chunk_relevances: List[ChunkRelevance]
     suggested_answer_focus: Optional[str] = None
 
-
-# --- Evaluator ---
 
 def evaluate_retrieval(
     question: str,
@@ -71,26 +71,30 @@ Respond in this exact JSON format only, no extra text:
   "suggested_answer_focus": null
 }}"""
 
-    response = requests.post(
-        f"{OLLAMA_BASE_URL}/api/generate",
-        json={
-            "model": EVAL_MODEL,
-            "prompt": eval_prompt,
-            "stream": False,
-            "options": {"temperature": 0.0, "num_predict": 600}
-        }
+    response = client.chat.completions.create(
+        model=EVAL_MODEL,
+        messages=[
+            {
+                "role": "system",
+                "content": "You are a precise RAG evaluation agent. Respond only with valid JSON."
+            },
+            {
+                "role": "user",
+                "content": eval_prompt
+            }
+        ],
+        temperature=0.0,
+        max_tokens=600,
     )
-    response.raise_for_status()
-    raw = response.json()["response"].strip()
 
-    # Strip markdown fences if present
+    raw = response.choices[0].message.content.strip()
+
     if "```" in raw:
         raw = raw.split("```")[1]
         if raw.startswith("json"):
             raw = raw[4:]
         raw = raw.strip()
 
-    # Extract JSON object
     start = raw.find("{")
     end = raw.rfind("}") + 1
     if start != -1 and end > start:
@@ -99,8 +103,6 @@ Respond in this exact JSON format only, no extra text:
     data = json.loads(raw)
     return EvaluationResult(**data)
 
-
-# --- Re-ranker ---
 
 def rerank_chunks(chunks: List[Dict], evaluation: EvaluationResult) -> List[Dict]:
     if not evaluation.chunk_relevances:
@@ -118,8 +120,6 @@ def rerank_chunks(chunks: List[Dict], evaluation: EvaluationResult) -> List[Dict
 
     return sorted(chunks, key=lambda x: x["combined_score"], reverse=True)
 
-
-# --- Full pipeline ---
 
 def run_evaluation_pipeline(
     question: str,
