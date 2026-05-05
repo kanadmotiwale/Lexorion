@@ -29,25 +29,18 @@ app.add_middleware(
 @app.on_event("startup")
 async def startup_event():
     init_db()
-    os.makedirs("uploads", exist_ok=True)
-    os.makedirs("faiss_index", exist_ok=True)
     print("✅ Lexorion API started")
-    print("📦 Database initialized")
-    print("🔍 FAISS index ready")
+    print("🗄️  Connected to Supabase PostgreSQL")
+    print("🔍 pgvector ready for semantic search")
     print("⚡ Embedding model will load on first request")
 
 app.include_router(upload.router, prefix="/api/v1", tags=["documents"])
-app.include_router(chat.router, prefix="/api/v1", tags=["chat"])
+app.include_router(chat.router,   prefix="/api/v1", tags=["chat"])
 app.include_router(search.router, prefix="/api/v1", tags=["search"])
 
 @app.get("/")
 def root():
-    return {
-        "name": "Lexorion",
-        "version": "1.0.0",
-        "status": "running",
-        "docs": "/docs",
-    }
+    return {"name": "Lexorion", "version": "1.0.0", "status": "running", "docs": "/docs"}
 
 @app.get("/health")
 def health():

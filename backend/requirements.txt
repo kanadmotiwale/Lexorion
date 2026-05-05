@@ -1,12 +1,13 @@
 fastapi
 uvicorn
 groq
-faiss-cpu
 pymupdf
 pydantic
 python-multipart
 aiofiles
 sqlalchemy
+psycopg2-binary
+pgvector
 python-dotenv
 tiktoken
 fastembed==0.2.7

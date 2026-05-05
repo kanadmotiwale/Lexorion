@@ -13,14 +13,12 @@ router = APIRouter()
 @router.post("/chat", response_model=ChatResponse)
 def chat(request: ChatRequest, db: Session = Depends(get_db)):
     if not request.question.strip():
-        raise HTTPException(
-            status_code=400,
-            detail="Question cannot be empty"
-        )
+        raise HTTPException(status_code=400, detail="Question cannot be empty")
 
-    # Step 1: Retrieve relevant chunks from FAISS
+    # Step 1 — Vector search via pgvector
     chunks = search_index(
         query=request.question,
+        db=db,
         top_k=request.top_k,
         score_threshold=request.score_threshold,
     )
@@ -30,59 +28,47 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)):
             answer="I could not find relevant information in the indexed documents. Please upload some documents first.",
             sources=[],
             confidence=0.0,
-            model="gpt-4o-mini",
+            model="llama-3.1-8b-instant",
         )
 
-    # Step 2: Build filename map from DB
-    document_ids = list(set(chunk["document_id"] for chunk in chunks))
-    documents = db.query(Document).filter(
-        Document.id.in_(document_ids)
-    ).all()
-    filename_map = {doc.id: doc.filename for doc in documents}
+    # Step 2 — Build filename map (chunks already carry filename from pgvector query)
+    filename_map = {c["document_id"]: c["filename"] for c in chunks}
 
-    # Attach filenames to chunks
-    for chunk in chunks:
-        chunk["filename"] = filename_map.get(chunk["document_id"], "unknown")
-
-    # Step 3: Run RAG chain to generate answer
+    # Step 3 — Generate answer via Groq
     rag_result = run_rag_chain(
         question=request.question,
         chunks=chunks,
         filename_map=filename_map,
     )
 
-    # Step 4: Run agent evaluation + re-ranking
+    # Step 4 — Evaluate & re-rank
     eval_result = run_evaluation_pipeline(
         question=request.question,
         chunks=chunks,
         answer=rag_result["answer"],
     )
 
-    # Step 5: Use re-ranked chunks and adjusted confidence
-    final_chunks = eval_result["reranked_chunks"]
+    final_chunks     = eval_result["reranked_chunks"]
     final_confidence = eval_result["adjusted_confidence"]
 
-    # Step 6: Format sources
     sources = [
         SourceChunk(
-            document_id=chunk["document_id"],
-            filename=chunk.get("filename", "unknown"),
-            chunk_index=chunk["chunk_index"],
-            text=chunk["text"],
-            score=chunk.get("combined_score", chunk.get("score", 0.0)),
+            document_id = chunk["document_id"],
+            filename    = chunk.get("filename", "unknown"),
+            chunk_index = chunk["chunk_index"],
+            text        = chunk["text"],
+            score       = chunk.get("combined_score", chunk.get("score", 0.0)),
         )
         for chunk in final_chunks[:5]
     ]
 
     return ChatResponse(
-        answer=rag_result["answer"],
-        sources=sources,
-        confidence=final_confidence,
-        model=rag_result["model"],
+        answer     = rag_result["answer"],
+        sources    = sources,
+        confidence = final_confidence,
+        model      = rag_result["model"],
     )
 
-
-# --- Health check for chat service ---
 
 @router.get("/chat/health")
 def chat_health():
