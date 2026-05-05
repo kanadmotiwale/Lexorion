@@ -1,4 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "./lib/supabase";
+import LoginPage from "./pages/LoginPage";
+import SignupPage from "./pages/SignupPage";
 import ChatPanel from "./components/ChatPanel";
 import UploadPanel from "./components/UploadPanel";
 import SearchPanel from "./components/SearchPanel";
@@ -13,8 +16,43 @@ export default function App() {
   const [tab, setTab]               = useState("chat");
   const [documents, setDocuments]   = useState([]);
   const [sidebarOpen, setSidebar]   = useState(false);
+  const [session, setSession]       = useState(undefined); // undefined = loading
+  const [authView, setAuthView]     = useState("login");   // "login" | "signup"
+
+  useEffect(() => {
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+    // Listen for auth changes (login, logout, token refresh)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+  };
 
   const switchTab = (id) => { setTab(id); setSidebar(false); };
+
+  // Still checking session
+  if (session === undefined) {
+    return (
+      <div style={{ height: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", background: "#0f0f0f" }}>
+        <div style={{ width: 36, height: 36, border: "3px solid #d97706", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
+      </div>
+    );
+  }
+
+  // Not logged in
+  if (!session) {
+    if (authView === "signup") {
+      return <SignupPage onSwitch={() => setAuthView("login")} />;
+    }
+    return <LoginPage onSwitch={() => setAuthView("signup")} />;
+  }
 
   return (
     <div className="app-root">
@@ -60,7 +98,15 @@ export default function App() {
               {documents.length} document{documents.length !== 1 ? "s" : ""} indexed
             </span>
           </div>
-          <div style={s.poweredBy}>Powered by Groq · FAISS</div>
+          <div style={s.userRow}>
+            <span style={s.userEmail} title={session.user.email}>
+              {session.user.email}
+            </span>
+            <button style={s.logoutBtn} onClick={handleLogout} title="Sign out">
+              ⎋
+            </button>
+          </div>
+          <div style={s.poweredBy}>Powered by Groq · pgvector</div>
         </div>
       </aside>
 
@@ -131,8 +177,21 @@ const s = {
   },
   navIcon: { fontSize: 14, width: 18, textAlign: "center", flexShrink: 0 },
   sidebarFooter: { padding: "14px 16px", borderTop: "1px solid #2a2a2a" },
-  footerPill: { display: "flex", alignItems: "center", gap: 6, marginBottom: 6 },
+  footerPill: { display: "flex", alignItems: "center", gap: 6, marginBottom: 8 },
   footerText: { fontSize: 12, color: "#6b7280" },
+  userRow: {
+    display: "flex", alignItems: "center", gap: 6,
+    marginBottom: 6, minWidth: 0,
+  },
+  userEmail: {
+    flex: 1, fontSize: 11, color: "#6b7280",
+    overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+  },
+  logoutBtn: {
+    background: "transparent", border: "1px solid #2a2a2a",
+    borderRadius: 6, color: "#6b7280", cursor: "pointer",
+    fontSize: 14, lineHeight: 1, padding: "3px 6px", flexShrink: 0,
+  },
   poweredBy: { fontSize: 10, color: "#404040", letterSpacing: "0.02em" },
   hamburger: {
     background: "transparent", border: "none", fontSize: 20,
