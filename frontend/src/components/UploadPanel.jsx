@@ -3,11 +3,11 @@ import { uploadDocument, listDocuments, deleteDocument } from "../api/client";
 
 export default function UploadPanel({ onDocumentsChange }) {
   const [documents, setDocuments] = useState([]);
-  const [uploading, setUploading] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
-  const [dragging, setDragging] = useState(false);
+  const [uploading, setUploading]  = useState(false);
+  const [progress, setProgress]    = useState(0);
+  const [error, setError]          = useState(null);
+  const [success, setSuccess]      = useState(null);
+  const [dragging, setDragging]    = useState(false);
   const fileRef = useRef(null);
 
   useEffect(() => { fetchDocs(); }, []);
@@ -15,19 +15,22 @@ export default function UploadPanel({ onDocumentsChange }) {
   const fetchDocs = async () => {
     try {
       const data = await listDocuments();
-      setDocuments(data.documents || []);
-      onDocumentsChange?.(data.documents || []);
+      const docs = data.documents || [];
+      setDocuments(docs);
+      onDocumentsChange?.(docs);
     } catch {}
   };
 
   const handleUpload = async (file) => {
     setUploading(true); setError(null); setSuccess(null); setProgress(0);
     try {
-      await uploadDocument(file, (e) => setProgress(Math.round((e.loaded * 100) / e.total)));
+      await uploadDocument(file, (e) =>
+        setProgress(Math.round((e.loaded * 100) / e.total))
+      );
       setSuccess(`"${file.name}" indexed successfully!`);
       await fetchDocs();
     } catch (err) {
-      setError(err.response?.data?.detail || "Upload failed.");
+      setError(err.response?.data?.detail || "Upload failed. Please try again.");
     } finally {
       setUploading(false); setProgress(0);
       if (fileRef.current) fileRef.current.value = "";
@@ -36,90 +39,207 @@ export default function UploadPanel({ onDocumentsChange }) {
 
   const handleDelete = async (id, name) => {
     if (!confirm(`Delete "${name}"?`)) return;
-    try { await deleteDocument(id); await fetchDocs(); setSuccess(`Deleted.`); }
+    try { await deleteDocument(id); await fetchDocs(); setSuccess("Document deleted."); }
     catch { setError("Delete failed."); }
   };
 
-  const statusStyle = (status) => ({
-    fontSize: "11px", fontWeight: 600, padding: "2px 8px", borderRadius: "20px",
-    background: status === "indexed" ? "#fef3c7" : status === "processing" ? "#fef9c3" : "#fee2e2",
-    color: status === "indexed" ? "#92400e" : status === "processing" ? "#ca8a04" : "#dc2626",
-  });
-
   return (
     <div style={s.wrap}>
-      <div
-        style={{ ...s.dropZone, borderColor: dragging ? "#d97706" : "#e5e7eb", background: dragging ? "#fffbeb" : "#fff" }}
-        onClick={() => fileRef.current?.click()}
-        onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
-        onDragLeave={() => setDragging(false)}
-        onDrop={(e) => { e.preventDefault(); setDragging(false); const f = e.dataTransfer.files[0]; if (f) handleUpload(f); }}
-      >
-        <input ref={fileRef} type="file" accept=".pdf,.txt,.md" style={{ display: "none" }} onChange={(e) => { if (e.target.files[0]) handleUpload(e.target.files[0]); }} />
-        {uploading ? (
-          <div style={{ width: "100%" }}>
-            <p style={s.dropTitle}>Indexing... {progress}%</p>
-            <div style={s.track}><div style={{ ...s.fill, width: `${progress}%` }} /></div>
-            <p style={s.dropSub}>Parsing, chunking, embedding</p>
-          </div>
-        ) : (
-          <>
-            <div style={s.uploadIcon}>📂</div>
-            <p style={s.dropTitle}>Tap to upload a file</p>
-            <p style={s.dropSub}>PDF, TXT, MD · Max 10MB</p>
-            <div style={s.formatRow}>
-              {["PDF", "TXT", "MD"].map((f) => <span key={f} style={s.formatTag}>{f}</span>)}
-            </div>
-          </>
-        )}
-      </div>
+      <div style={s.inner}>
 
-      {error && <div style={s.errorBox}>⚠️ {error}</div>}
-      {success && <div style={s.successBox}>✅ {success}</div>}
-
-      <div style={s.tableCard}>
-        <div style={s.tableHead}>
-          <span style={{ flex: 3 }}>Name</span>
-          <span style={{ flex: 1, textAlign: "center" }}>Chunks</span>
-          <span style={{ flex: 1, textAlign: "center" }}>Status</span>
-          <span style={{ flex: 1, textAlign: "center" }}>Del</span>
+        {/* Header */}
+        <div style={s.pageHeader}>
+          <h2 style={s.pageTitle}>Documents</h2>
+          <p style={s.pageSub}>Upload PDF, TXT, or MD files to build your knowledge base.</p>
         </div>
-        {documents.length === 0 ? (
-          <div style={s.empty}>No documents yet.</div>
-        ) : (
-          documents.map((doc) => (
-            <div key={doc.id} style={s.tableRow}>
-              <span style={{ flex: 3, fontSize: "12px", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {doc.filename}
-              </span>
-              <span style={{ flex: 1, textAlign: "center", fontSize: "12px", color: "#6b7280" }}>{doc.total_chunks}</span>
-              <span style={{ flex: 1, textAlign: "center" }}><span style={statusStyle(doc.status)}>{doc.status}</span></span>
-              <span style={{ flex: 1, textAlign: "center" }}>
-                <button style={s.delBtn} onClick={() => handleDelete(doc.id, doc.filename)}>🗑</button>
-              </span>
+
+        {/* Drop zone */}
+        <div
+          style={{
+            ...s.dropZone,
+            borderColor: dragging ? "#d97706" : "#e5e7eb",
+            background: dragging ? "#fffbeb" : "#fafafa",
+          }}
+          onClick={() => !uploading && fileRef.current?.click()}
+          onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+          onDragLeave={() => setDragging(false)}
+          onDrop={(e) => {
+            e.preventDefault(); setDragging(false);
+            const f = e.dataTransfer.files[0];
+            if (f) handleUpload(f);
+          }}
+        >
+          <input
+            ref={fileRef} type="file" accept=".pdf,.txt,.md"
+            style={{ display: "none" }}
+            onChange={(e) => { if (e.target.files[0]) handleUpload(e.target.files[0]); }}
+          />
+
+          {uploading ? (
+            <div style={{ width: "100%", textAlign: "center" }}>
+              <p style={s.dropTitle}>Indexing… {progress}%</p>
+              <div style={s.progressTrack}>
+                <div style={{ ...s.progressFill, width: `${progress}%` }} />
+              </div>
+              <p style={s.dropSub}>Parsing, chunking, embedding your document</p>
             </div>
-          ))
+          ) : (
+            <>
+              <div style={s.uploadIconWrap}>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
+                  stroke="#d97706" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="17 8 12 3 7 8"/>
+                  <line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+              </div>
+              <p style={s.dropTitle}>Drop a file or click to upload</p>
+              <p style={s.dropSub}>PDF · TXT · MD &nbsp;·&nbsp; Max 10 MB</p>
+              <div style={s.formatRow}>
+                {["PDF", "TXT", "MD"].map((f) => (
+                  <span key={f} style={s.formatTag}>{f}</span>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Alerts */}
+        {error && (
+          <div style={s.alert}>
+            <span style={{ color: "#ef4444" }}>⚠</span> {error}
+          </div>
         )}
+        {success && (
+          <div style={{ ...s.alert, background: "#f0fdf4", borderColor: "#bbf7d0", color: "#166534" }}>
+            <span>✓</span> {success}
+          </div>
+        )}
+
+        {/* Document list */}
+        <div style={s.tableWrap}>
+          <div style={s.tableHead}>
+            <span style={{ flex: 3 }}>Name</span>
+            <span style={{ flex: 1, textAlign: "center" }}>Chunks</span>
+            <span style={{ flex: 1, textAlign: "center" }}>Status</span>
+            <span style={{ flex: 0, width: 40, textAlign: "center" }}></span>
+          </div>
+
+          {documents.length === 0 ? (
+            <div style={s.empty}>
+              <p style={{ fontSize: 28, marginBottom: 8 }}>📭</p>
+              <p style={{ fontWeight: 600, color: "#374151", marginBottom: 4 }}>No documents yet</p>
+              <p style={{ fontSize: 13, color: "#9ca3af" }}>Upload your first document above</p>
+            </div>
+          ) : (
+            documents.map((doc) => (
+              <div key={doc.id} style={s.tableRow}>
+                <span style={{ flex: 3, fontSize: 13, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "#111827" }}>
+                  {doc.filename}
+                </span>
+                <span style={{ flex: 1, textAlign: "center", fontSize: 13, color: "#6b7280" }}>
+                  {doc.total_chunks}
+                </span>
+                <span style={{ flex: 1, textAlign: "center" }}>
+                  <span style={statusBadge(doc.status)}>{doc.status}</span>
+                </span>
+                <span style={{ width: 40, textAlign: "center" }}>
+                  <button
+                    style={s.delBtn}
+                    onClick={() => handleDelete(doc.id, doc.filename)}
+                    title="Delete"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                      stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="3 6 5 6 21 6"/>
+                      <path d="M19 6l-1 14H6L5 6"/>
+                      <path d="M10 11v6M14 11v6"/>
+                    </svg>
+                  </button>
+                </span>
+              </div>
+            ))
+          )}
+        </div>
+
       </div>
     </div>
   );
 }
 
+const statusBadge = (status) => ({
+  fontSize: 11, fontWeight: 600, padding: "3px 9px", borderRadius: 20,
+  background: status === "indexed" ? "#f0fdf4" : status === "processing" ? "#fffbeb" : "#fef2f2",
+  color: status === "indexed" ? "#166534" : status === "processing" ? "#92400e" : "#dc2626",
+  border: `1px solid ${status === "indexed" ? "#bbf7d0" : status === "processing" ? "#fde68a" : "#fecaca"}`,
+});
+
 const s = {
-  wrap: { padding: "16px", overflowY: "auto", height: "100%", display: "flex", flexDirection: "column", gap: "14px", background: "#f9fafb" },
-  dropZone: { border: "2px dashed", borderRadius: "14px", padding: "32px 20px", textAlign: "center", cursor: "pointer", transition: "all 0.2s", display: "flex", flexDirection: "column", alignItems: "center", gap: "5px" },
-  uploadIcon: { fontSize: "28px", marginBottom: "4px" },
-  dropTitle: { fontSize: "14px", fontWeight: 600, margin: 0, color: "#1c1917" },
-  dropSub: { fontSize: "12px", color: "#9ca3af", margin: 0 },
-  formatRow: { display: "flex", gap: "6px", marginTop: "8px" },
-  formatTag: { fontSize: "11px", padding: "2px 8px", borderRadius: "20px", background: "#fef3c7", color: "#92400e", fontWeight: 500, border: "1px solid #fde68a" },
-  track: { height: "5px", background: "#e5e7eb", borderRadius: "3px", overflow: "hidden", margin: "8px 0" },
-  fill: { height: "100%", background: "#d97706", borderRadius: "3px", transition: "width 0.2s" },
-  errorBox: { background: "#fee2e2", color: "#dc2626", padding: "10px 14px", borderRadius: "10px", fontSize: "13px", fontWeight: 500 },
-  successBox: { background: "#fef3c7", color: "#92400e", padding: "10px 14px", borderRadius: "10px", fontSize: "13px", fontWeight: 500 },
-  tableCard: { background: "#fff", border: "1px solid #e5e7eb", borderRadius: "12px", overflow: "hidden" },
-  tableHead: { display: "flex", padding: "10px 14px", background: "#f9fafb", fontSize: "10px", fontWeight: 600, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.06em", gap: "6px", borderBottom: "1px solid #e5e7eb" },
-  tableRow: { display: "flex", padding: "12px 14px", borderBottom: "1px solid #f3f4f6", alignItems: "center", gap: "6px" },
-  delBtn: { background: "transparent", border: "none", cursor: "pointer", fontSize: "16px", padding: "2px" },
-  empty: { padding: "24px", textAlign: "center", fontSize: "13px", color: "#9ca3af" },
+  wrap: {
+    height: "100%", overflowY: "auto", background: "#fff",
+    display: "flex", justifyContent: "center",
+  },
+  inner: {
+    width: "100%", maxWidth: 680,
+    padding: "40px 24px 60px",
+    display: "flex", flexDirection: "column", gap: 20,
+  },
+  pageHeader: { marginBottom: 4 },
+  pageTitle: { fontSize: 22, fontWeight: 700, color: "#111827", marginBottom: 4 },
+  pageSub: { fontSize: 14, color: "#6b7280" },
+  dropZone: {
+    border: "2px dashed", borderRadius: 16,
+    padding: "40px 24px", textAlign: "center",
+    cursor: "pointer", transition: "all 0.2s",
+    display: "flex", flexDirection: "column",
+    alignItems: "center", gap: 8,
+  },
+  uploadIconWrap: {
+    width: 56, height: 56, borderRadius: 14,
+    background: "#fff7ed", display: "flex",
+    alignItems: "center", justifyContent: "center", marginBottom: 4,
+  },
+  dropTitle: { fontSize: 15, fontWeight: 600, color: "#111827" },
+  dropSub: { fontSize: 13, color: "#9ca3af" },
+  formatRow: { display: "flex", gap: 6, marginTop: 4 },
+  formatTag: {
+    fontSize: 11, padding: "2px 9px", borderRadius: 20,
+    background: "#fff7ed", color: "#92400e",
+    fontWeight: 600, border: "1px solid #fde68a",
+  },
+  progressTrack: {
+    height: 4, background: "#e5e7eb", borderRadius: 99,
+    overflow: "hidden", margin: "10px auto", width: "100%", maxWidth: 320,
+  },
+  progressFill: { height: "100%", background: "#d97706", borderRadius: 99, transition: "width 0.2s" },
+  alert: {
+    display: "flex", alignItems: "center", gap: 8,
+    padding: "12px 16px", borderRadius: 12, fontSize: 13, fontWeight: 500,
+    background: "#fef2f2", border: "1px solid #fecaca", color: "#dc2626",
+  },
+  tableWrap: {
+    border: "1px solid #e5e7eb", borderRadius: 14, overflow: "hidden",
+    background: "#fff",
+  },
+  tableHead: {
+    display: "flex", padding: "10px 16px",
+    background: "#f9fafb", borderBottom: "1px solid #e5e7eb",
+    fontSize: 11, fontWeight: 600, color: "#9ca3af",
+    textTransform: "uppercase", letterSpacing: "0.06em", gap: 8,
+  },
+  tableRow: {
+    display: "flex", padding: "14px 16px",
+    borderBottom: "1px solid #f3f4f6",
+    alignItems: "center", gap: 8,
+    transition: "background 0.1s",
+  },
+  delBtn: {
+    background: "transparent", border: "none",
+    color: "#9ca3af", cursor: "pointer", padding: 4,
+    borderRadius: 6, display: "flex", alignItems: "center",
+    justifyContent: "center", transition: "color 0.15s",
+  },
+  empty: {
+    padding: "48px 24px", textAlign: "center", color: "#9ca3af",
+  },
 };
