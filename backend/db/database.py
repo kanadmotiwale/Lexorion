@@ -1,14 +1,20 @@
 import os
+from urllib.parse import quote_plus
 from sqlalchemy import create_engine, Column, String, Integer, DateTime, Text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from pgvector.sqlalchemy import Vector
 from datetime import datetime
 
-# Support both "postgres://" (old Heroku style) and "postgresql://"
-DATABASE_URL = os.getenv("DATABASE_URL", "")
-if DATABASE_URL.startswith("postgres://"):
-    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+# Build the URL from individual params so special characters in the
+# password are safely percent-encoded and never break URL parsing.
+DB_HOST = os.getenv("DB_HOST", "")
+DB_PORT = os.getenv("DB_PORT", "5432")
+DB_NAME = os.getenv("DB_NAME", "postgres")
+DB_USER = os.getenv("DB_USER", "postgres")
+DB_PASS = quote_plus(os.getenv("DB_PASS", ""))   # encodes @, #, etc.
+
+DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
 engine = create_engine(DATABASE_URL, pool_pre_ping=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
