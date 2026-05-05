@@ -26,6 +26,7 @@ class Document(Base):
     __table_args__ = {"extend_existing": True}
 
     id           = Column(String, primary_key=True)
+    user_id      = Column(String, nullable=False, default="")
     filename     = Column(String, nullable=False)
     file_type    = Column(String, nullable=False)
     file_size    = Column(Integer, nullable=False)

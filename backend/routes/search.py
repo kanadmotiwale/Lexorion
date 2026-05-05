@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends, Query
 from sqlalchemy.orm import Session
 from typing import Optional
 
+from auth import get_user_id
 from db.database import get_db, Document
 from models.schemas import SearchResponse, SearchResult
 from services.retriever import search_index, get_index_stats
@@ -13,17 +14,19 @@ router = APIRouter()
 
 @router.get("/search", response_model=SearchResponse)
 def semantic_search(
-    query:           str            = Query(..., min_length=1),
-    top_k:           int            = Query(5, ge=1, le=20),
-    score_threshold: float          = Query(0.0, ge=0.0, le=1.0),
-    file_type:       Optional[str]  = Query(None),
-    db:              Session        = Depends(get_db),
+    query:           str           = Query(..., min_length=1),
+    top_k:           int           = Query(5, ge=1, le=20),
+    score_threshold: float         = Query(0.0, ge=0.0, le=1.0),
+    file_type:       Optional[str] = Query(None),
+    db:              Session       = Depends(get_db),
+    user_id:         str           = Depends(get_user_id),
 ):
     chunks = search_index(
         query=query,
         db=db,
         top_k=top_k,
         score_threshold=score_threshold,
+        user_id=user_id,
     )
 
     if not chunks:
@@ -33,7 +36,11 @@ def semantic_search(
     for chunk in chunks:
         # Filter by file_type if requested
         if file_type:
-            doc = db.query(Document).filter(Document.id == chunk["document_id"]).first()
+            doc = (
+                db.query(Document)
+                .filter(Document.id == chunk["document_id"], Document.user_id == user_id)
+                .first()
+            )
             if not doc or doc.file_type != file_type:
                 continue
 
@@ -52,8 +59,11 @@ def semantic_search(
 # ── Stats ──────────────────────────────────────────────────────────────────────
 
 @router.get("/search/stats")
-def index_stats(db: Session = Depends(get_db)):
-    return {"status": "ok", "index": get_index_stats(db)}
+def index_stats(
+    db:      Session = Depends(get_db),
+    user_id: str     = Depends(get_user_id),
+):
+    return {"status": "ok", "index": get_index_stats(db, user_id=user_id)}
 
 
 # ── Search within a document ───────────────────────────────────────────────────
@@ -64,8 +74,13 @@ def search_in_document(
     query:       str     = Query(..., min_length=1),
     top_k:       int     = Query(5, ge=1, le=20),
     db:          Session = Depends(get_db),
+    user_id:     str     = Depends(get_user_id),
 ):
-    doc = db.query(Document).filter(Document.id == document_id).first()
+    doc = (
+        db.query(Document)
+        .filter(Document.id == document_id, Document.user_id == user_id)
+        .first()
+    )
     if not doc:
         raise HTTPException(status_code=404, detail="Document not found")
 
@@ -75,6 +90,7 @@ def search_in_document(
         top_k=top_k,
         score_threshold=0.0,
         document_ids=[document_id],
+        user_id=user_id,
     )
 
     results = [

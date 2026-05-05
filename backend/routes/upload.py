@@ -2,6 +2,7 @@ import uuid
 from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
 from sqlalchemy.orm import Session
 
+from auth import get_user_id
 from db.database import get_db, Document, Chunk
 from models.schemas import DocumentResponse, DocumentListResponse
 from services.etl import run_etl
@@ -26,8 +27,9 @@ def get_file_type(filename: str) -> str:
 
 @router.post("/upload", response_model=DocumentResponse)
 async def upload_document(
-    file: UploadFile = File(...),
-    db:   Session    = Depends(get_db),
+    file:    UploadFile = File(...),
+    db:      Session    = Depends(get_db),
+    user_id: str        = Depends(get_user_id),
 ):
     file_type = get_file_type(file.filename)
     content   = await file.read()
@@ -37,9 +39,10 @@ async def upload_document(
 
     document_id = str(uuid.uuid4())
 
-    # Persist document record immediately
+    # Persist document record — scoped to the authenticated user
     doc = Document(
         id        = document_id,
+        user_id   = user_id,
         filename  = file.filename,
         file_type = file_type,
         file_size = len(content),
@@ -79,16 +82,32 @@ async def upload_document(
 # ── List ───────────────────────────────────────────────────────────────────────
 
 @router.get("/documents", response_model=DocumentListResponse)
-def list_documents(db: Session = Depends(get_db)):
-    documents = db.query(Document).order_by(Document.created_at.desc()).all()
+def list_documents(
+    db:      Session = Depends(get_db),
+    user_id: str     = Depends(get_user_id),
+):
+    documents = (
+        db.query(Document)
+        .filter(Document.user_id == user_id)
+        .order_by(Document.created_at.desc())
+        .all()
+    )
     return DocumentListResponse(documents=documents, total=len(documents))
 
 
 # ── Get one ────────────────────────────────────────────────────────────────────
 
 @router.get("/documents/{document_id}", response_model=DocumentResponse)
-def get_document(document_id: str, db: Session = Depends(get_db)):
-    doc = db.query(Document).filter(Document.id == document_id).first()
+def get_document(
+    document_id: str,
+    db:          Session = Depends(get_db),
+    user_id:     str     = Depends(get_user_id),
+):
+    doc = (
+        db.query(Document)
+        .filter(Document.id == document_id, Document.user_id == user_id)
+        .first()
+    )
     if not doc:
         raise HTTPException(status_code=404, detail="Document not found")
     return doc
@@ -97,8 +116,16 @@ def get_document(document_id: str, db: Session = Depends(get_db)):
 # ── Delete ─────────────────────────────────────────────────────────────────────
 
 @router.delete("/documents/{document_id}")
-def delete_document(document_id: str, db: Session = Depends(get_db)):
-    doc = db.query(Document).filter(Document.id == document_id).first()
+def delete_document(
+    document_id: str,
+    db:          Session = Depends(get_db),
+    user_id:     str     = Depends(get_user_id),
+):
+    doc = (
+        db.query(Document)
+        .filter(Document.id == document_id, Document.user_id == user_id)
+        .first()
+    )
     if not doc:
         raise HTTPException(status_code=404, detail="Document not found")
 

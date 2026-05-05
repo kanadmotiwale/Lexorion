@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
 
+from auth import get_user_id
 from db.database import get_db, Document
 from models.schemas import ChatRequest, ChatResponse, SourceChunk
 from services.retriever import search_index
@@ -11,21 +12,26 @@ router = APIRouter()
 
 
 @router.post("/chat", response_model=ChatResponse)
-def chat(request: ChatRequest, db: Session = Depends(get_db)):
+def chat(
+    request: ChatRequest,
+    db:      Session = Depends(get_db),
+    user_id: str     = Depends(get_user_id),
+):
     if not request.question.strip():
         raise HTTPException(status_code=400, detail="Question cannot be empty")
 
-    # Step 1 — Vector search via pgvector
+    # Step 1 — Vector search via pgvector, scoped to this user's documents
     chunks = search_index(
         query=request.question,
         db=db,
         top_k=request.top_k,
         score_threshold=request.score_threshold,
+        user_id=user_id,
     )
 
     if not chunks:
         return ChatResponse(
-            answer="I could not find relevant information in the indexed documents. Please upload some documents first.",
+            answer="I could not find relevant information in your documents. Please upload some documents first.",
             sources=[],
             confidence=0.0,
             model="llama-3.1-8b-instant",
