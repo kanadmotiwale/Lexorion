@@ -2,19 +2,22 @@ import os
 import uuid
 import tiktoken
 import fitz
-from sentence_transformers import SentenceTransformer
 from typing import List, Dict
 
-EMBEDDING_MODEL_NAME = "all-MiniLM-L6-v2"
 CHUNK_SIZE = 512
 CHUNK_OVERLAP = 64
-
 encoding = tiktoken.get_encoding("cl100k_base")
-embedding_model = SentenceTransformer(EMBEDDING_MODEL_NAME)
 
+# Lazy load — model loads on first request, not at startup
+_embedding_model = None
 
-def count_tokens(text: str) -> int:
-    return len(encoding.encode(text))
+def get_embedding_model():
+    global _embedding_model
+    if _embedding_model is None:
+        from fastembed import TextEmbedding
+        _embedding_model = TextEmbedding(model_name="BAAI/bge-small-en-v1.5")
+    return _embedding_model
+
 
 def tokenize(text: str) -> List[int]:
     return encoding.encode(text)
@@ -69,12 +72,14 @@ def chunk_text(text: str, document_id: str) -> List[Dict]:
 
 
 def embed_texts(texts: List[str]) -> List[List[float]]:
-    embeddings = embedding_model.encode(texts, show_progress_bar=False)
-    return embeddings.tolist()
+    model = get_embedding_model()
+    embeddings = list(model.embed(texts))
+    return [e.tolist() for e in embeddings]
 
 def embed_query(query: str) -> List[float]:
-    embedding = embedding_model.encode([query], show_progress_bar=False)
-    return embedding[0].tolist()
+    model = get_embedding_model()
+    embeddings = list(model.embed([query]))
+    return embeddings[0].tolist()
 
 
 def run_etl(file_path: str, file_type: str, document_id: str) -> List[Dict]:

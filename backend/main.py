@@ -8,29 +8,23 @@ from routes import upload, chat, search
 
 load_dotenv()
 
-# --- App init ---
-
 app = FastAPI(
     title="Lexorion API",
     description="RAG-based AI Knowledge Assistant",
     version="1.0.0",
 )
 
-# --- CORS ---
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:5173",   # Vite dev server
+        "http://localhost:5173",
         "http://localhost:3000",
-        os.getenv("FRONTEND_URL", "*"),  # Production frontend URL
+        os.getenv("FRONTEND_URL", "*"),
     ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# --- Startup ---
 
 @app.on_event("startup")
 async def startup_event():
@@ -38,18 +32,13 @@ async def startup_event():
     os.makedirs("uploads", exist_ok=True)
     os.makedirs("faiss_index", exist_ok=True)
     print("✅ Lexorion API started")
-    print(f"📦 Database initialized")
-    print(f"🔍 FAISS index ready")
-
-
-# --- Routes ---
+    print("📦 Database initialized")
+    print("🔍 FAISS index ready")
+    print("⚡ Embedding model will load on first request")
 
 app.include_router(upload.router, prefix="/api/v1", tags=["documents"])
 app.include_router(chat.router, prefix="/api/v1", tags=["chat"])
 app.include_router(search.router, prefix="/api/v1", tags=["search"])
-
-
-# --- Root ---
 
 @app.get("/")
 def root():
@@ -60,9 +49,12 @@ def root():
         "docs": "/docs",
     }
 
-
-# --- Health ---
-
 @app.get("/health")
 def health():
     return {"status": "healthy", "service": "lexorion-api"}
+
+@app.get("/warmup")
+def warmup():
+    from services.etl import get_embedding_model
+    get_embedding_model()
+    return {"status": "warmed up", "model": "BAAI/bge-small-en-v1.5"}
