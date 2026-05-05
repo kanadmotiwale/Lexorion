@@ -4,10 +4,9 @@ groq
 faiss-cpu
 pymupdf
 pydantic
-pydantic-ai
 python-multipart
 aiofiles
 sqlalchemy
 python-dotenv
 tiktoken
-fastembed
+fastembed==0.2.7
