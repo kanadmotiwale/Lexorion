@@ -20,8 +20,8 @@ def get_encoding():
 def get_embedding_model():
     global _embedding_model
     if _embedding_model is None:
-        from sentence_transformers import SentenceTransformer
-        _embedding_model = SentenceTransformer("BAAI/bge-small-en-v1.5")
+        from fastembed import TextEmbedding
+        _embedding_model = TextEmbedding(model_name="BAAI/bge-small-en-v1.5")
     return _embedding_model
 
 
@@ -80,12 +80,12 @@ def chunk_text(text: str, document_id: str) -> List[Dict]:
 
 def embed_texts(texts: List[str]) -> List[List[float]]:
     model = get_embedding_model()
-    embeddings = model.encode(texts, normalize_embeddings=False)
+    embeddings = list(model.embed(texts))
     return [e.tolist() for e in embeddings]
 
 def embed_query(query: str) -> List[float]:
     model = get_embedding_model()
-    embeddings = model.encode([query], normalize_embeddings=False)
+    embeddings = list(model.embed([query]))
     return embeddings[0].tolist()
 
 

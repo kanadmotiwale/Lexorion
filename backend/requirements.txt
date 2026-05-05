@@ -10,4 +10,4 @@ aiofiles
 sqlalchemy
 python-dotenv
 tiktoken
-sentence-transformers
+fastembed
