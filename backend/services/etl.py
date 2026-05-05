@@ -1,15 +1,21 @@
 import os
 import uuid
-import tiktoken
-import fitz
 from typing import List, Dict
 
 CHUNK_SIZE = 512
 CHUNK_OVERLAP = 64
-encoding = tiktoken.get_encoding("cl100k_base")
 
-# Lazy load — model loads on first request, not at startup
+# Lazy load — both tiktoken and embedding model load on first request, not at startup
+_encoding = None
 _embedding_model = None
+
+
+def get_encoding():
+    global _encoding
+    if _encoding is None:
+        import tiktoken
+        _encoding = tiktoken.get_encoding("cl100k_base")
+    return _encoding
 
 def get_embedding_model():
     global _embedding_model
@@ -20,13 +26,14 @@ def get_embedding_model():
 
 
 def tokenize(text: str) -> List[int]:
-    return encoding.encode(text)
+    return get_encoding().encode(text)
 
 def decode_tokens(tokens: List[int]) -> str:
-    return encoding.decode(tokens)
+    return get_encoding().decode(tokens)
 
 
 def parse_pdf(file_path: str) -> str:
+    import fitz
     doc = fitz.open(file_path)
     text = ""
     for page in doc:
