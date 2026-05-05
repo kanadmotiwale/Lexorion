@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { sendMessage } from "../api/client";
+import { sendMessage, uploadDocument } from "../api/client";
 
 export default function ChatPanel({ onUploadClick }) {
   const [messages, setMessages] = useState([
@@ -10,10 +10,13 @@ export default function ChatPanel({ onUploadClick }) {
       confidence: null,
     },
   ]);
-  const [input, setInput]   = useState("");
-  const [loading, setLoading] = useState(false);
-  const bottomRef = useRef(null);
+  const [input, setInput]         = useState("");
+  const [loading, setLoading]     = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadName, setUploadName] = useState(null);
+  const bottomRef  = useRef(null);
   const textareaRef = useRef(null);
+  const fileRef    = useRef(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -56,6 +59,33 @@ export default function ChatPanel({ onUploadClick }) {
 
   const onKey = (e) => {
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); }
+  };
+
+  const handleFileUpload = async (file) => {
+    if (!file) return;
+    setUploading(true);
+    setUploadName(file.name);
+    try {
+      await uploadDocument(file);
+      setMessages((p) => [
+        ...p,
+        {
+          role: "ai",
+          text: `✓ "${file.name}" has been indexed successfully! You can now ask questions about it.`,
+          sources: [],
+          confidence: null,
+        },
+      ]);
+    } catch {
+      setMessages((p) => [
+        ...p,
+        { role: "ai", text: `Failed to upload "${file.name}". Please try again.`, sources: [], confidence: null },
+      ]);
+    } finally {
+      setUploading(false);
+      setUploadName(null);
+      if (fileRef.current) fileRef.current.value = "";
+    }
   };
 
   return (
@@ -117,7 +147,38 @@ export default function ChatPanel({ onUploadClick }) {
 
       {/* Input */}
       <div style={s.inputWrap}>
+
+        {/* Upload progress banner */}
+        {uploading && (
+          <div style={s.uploadBanner}>
+            <div style={s.uploadSpinner} />
+            <span>Indexing "{uploadName}"…</span>
+          </div>
+        )}
+
         <div style={s.inputBox}>
+          {/* Hidden file input */}
+          <input
+            ref={fileRef}
+            type="file"
+            accept=".pdf,.txt,.md"
+            style={{ display: "none" }}
+            onChange={(e) => handleFileUpload(e.target.files[0])}
+          />
+
+          {/* Attach button */}
+          <button
+            style={uploading ? s.attachBtnOff : s.attachBtn}
+            onClick={() => !uploading && fileRef.current?.click()}
+            disabled={uploading}
+            title="Upload document"
+          >
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66L9.42 16.41a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+            </svg>
+          </button>
+
           <textarea
             ref={textareaRef}
             style={s.textarea}
@@ -127,17 +188,20 @@ export default function ChatPanel({ onUploadClick }) {
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={onKey}
           />
+
+          {/* Send button */}
           <button
             style={input.trim() && !loading ? s.sendBtn : s.sendBtnOff}
             onClick={handleSend}
             disabled={!input.trim() || loading}
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M22 2L11 13" /><path d="M22 2L15 22 11 13 2 9l20-7z" />
             </svg>
           </button>
         </div>
-        <p style={s.hint}>Enter to send · Shift+Enter for new line</p>
+        <p style={s.hint}>Enter to send · Shift+Enter for new line · 📎 to upload docs</p>
       </div>
     </div>
   );
@@ -237,6 +301,19 @@ const s = {
     color: "#111827", maxHeight: 160, overflowY: "auto",
     padding: "2px 4px",
   },
+  attachBtn: {
+    width: 36, height: 36, borderRadius: 10,
+    background: "transparent", color: "#9ca3af",
+    border: "1px solid #e5e7eb", cursor: "pointer", flexShrink: 0,
+    display: "flex", alignItems: "center", justifyContent: "center",
+    transition: "color 0.15s, border-color 0.15s",
+  },
+  attachBtnOff: {
+    width: 36, height: 36, borderRadius: 10,
+    background: "transparent", color: "#d1d5db",
+    border: "1px solid #f0f0f0", cursor: "not-allowed", flexShrink: 0,
+    display: "flex", alignItems: "center", justifyContent: "center",
+  },
   sendBtn: {
     width: 36, height: 36, borderRadius: 10,
     background: "#d97706", color: "#fff",
@@ -249,6 +326,20 @@ const s = {
     background: "#e5e7eb", color: "#9ca3af",
     border: "none", cursor: "not-allowed", flexShrink: 0,
     display: "flex", alignItems: "center", justifyContent: "center",
+  },
+  uploadBanner: {
+    display: "flex", alignItems: "center", gap: 10,
+    background: "#fff7ed", border: "1px solid #fde68a",
+    borderRadius: 10, padding: "8px 14px", marginBottom: 8,
+    fontSize: 13, color: "#92400e", fontWeight: 500,
+    maxWidth: 780, margin: "0 auto 8px",
+  },
+  uploadSpinner: {
+    width: 14, height: 14, borderRadius: "50%",
+    border: "2px solid #fde68a",
+    borderTopColor: "#d97706",
+    animation: "spin 0.7s linear infinite",
+    flexShrink: 0,
   },
   hint: { fontSize: 11, color: "#d1d5db", textAlign: "center", marginTop: 8 },
 };
