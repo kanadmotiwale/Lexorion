@@ -109,7 +109,7 @@ const s = {
     display: "flex", alignItems: "center", justifyContent: "center",
     color: "#fff", fontWeight: 800, fontSize: 15, flexShrink: 0,
   },
-  logoText: { flex: 1, fontSize: 15, fontWeight: 700, color: "#f5f5f5", letterSpacing: "-0.3px" },
+  logoText: { flex: 1, fontSize: 19, fontWeight: 700, color: "#f5f5f5", letterSpacing: "-0.3px" },
   closeBtn: {
     background: "transparent", border: "none", color: "#666",
     fontSize: 16, cursor: "pointer", padding: 4, lineHeight: 1,
