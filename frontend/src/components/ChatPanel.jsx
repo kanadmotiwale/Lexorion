@@ -10,31 +10,36 @@ const WELCOME = {
 };
 
 export default function ChatPanel({ conversationId, isGuest, onConversationCreated, onUploadClick }) {
-  const [messages, setMessages]       = useState([WELCOME]);
-  const [input, setInput]             = useState("");
-  const [loading, setLoading]         = useState(false);
-  const [uploading, setUploading]     = useState(false);
-  const [uploadName, setUploadName]   = useState(null);
+  const [messages, setMessages]             = useState([WELCOME]);
+  const [input, setInput]                   = useState("");
+  const [loading, setLoading]               = useState(false);
+  const [uploading, setUploading]           = useState(false);
+  const [uploadName, setUploadName]         = useState(null);
   const [loadingHistory, setLoadingHistory] = useState(false);
+  // Track conversations we created ourselves so we don't re-fetch them
+  // (which would wipe the current messages off the screen)
+  const justCreatedRef = useRef(null);
 
   const bottomRef   = useRef(null);
   const textareaRef = useRef(null);
   const fileRef     = useRef(null);
 
-  // ── Load conversation history when switching conversations ─────────────────
+  // ── Load conversation history when SWITCHING to an existing conversation ───
   useEffect(() => {
     if (!conversationId) {
       setMessages([WELCOME]);
+      justCreatedRef.current = null;
       return;
     }
+
+    // Skip re-fetch if we just created this conversation ourselves —
+    // the messages are already in local state from the send flow.
+    if (justCreatedRef.current === conversationId) return;
 
     setLoadingHistory(true);
     getConversationMessages(conversationId)
       .then(({ messages: msgs }) => {
-        if (!msgs || msgs.length === 0) {
-          setMessages([WELCOME]);
-          return;
-        }
+        if (!msgs || msgs.length === 0) { setMessages([WELCOME]); return; }
         setMessages(
           msgs.map((m) => ({
             role:       m.role === "assistant" ? "ai" : "user",
@@ -44,7 +49,7 @@ export default function ChatPanel({ conversationId, isGuest, onConversationCreat
           }))
         );
       })
-      .catch(() => setMessages([WELCOME]))
+      .catch(() => { /* keep current messages on error */ })
       .finally(() => setLoadingHistory(false));
   }, [conversationId]);
 
@@ -85,8 +90,10 @@ export default function ChatPanel({ conversationId, isGuest, onConversationCreat
         },
       ]);
 
-      // If backend created a new conversation, tell App.jsx
+      // If backend created a new conversation, mark it so we don't re-fetch,
+      // then tell App.jsx to add it to the sidebar.
       if (result.conversation_id && result.conversation_id !== conversationId) {
+        justCreatedRef.current = result.conversation_id;
         onConversationCreated?.(result.conversation_id, question.slice(0, 60));
       }
     } catch {

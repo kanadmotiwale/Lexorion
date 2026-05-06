@@ -8,13 +8,12 @@ import SearchPanel from "./components/SearchPanel";
 import { listConversations, deleteConversation } from "./api/client";
 
 export default function App() {
-  const [session, setSession]                   = useState(undefined); // undefined = checking
+  const [session, setSession]                   = useState(undefined);
   const [guestMode, setGuestMode]               = useState(false);
   const [authView, setAuthView]                 = useState("login");
 
   const [tab, setTab]                           = useState("chat");
   const [sidebarOpen, setSidebar]               = useState(false);
-  const [documents, setDocuments]               = useState([]);
 
   const [conversations, setConversations]       = useState([]);
   const [activeConversationId, setActiveConvId] = useState(null);
@@ -31,13 +30,13 @@ export default function App() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // ── Load conversation list whenever the user signs in ──────────────────────
+  // ── Load conversations on login ────────────────────────────────────────────
   const refreshConversations = useCallback(async () => {
     if (!session) return;
     try {
       const data = await listConversations();
       setConversations(data.conversations || []);
-    } catch { /* silently ignore */ }
+    } catch { /* ignore */ }
   }, [session]);
 
   useEffect(() => { refreshConversations(); }, [refreshConversations]);
@@ -47,7 +46,6 @@ export default function App() {
     await supabase.auth.signOut();
     setConversations([]);
     setActiveConvId(null);
-    setGuestMode(false);
   };
 
   const handleNewChat = () => {
@@ -71,13 +69,17 @@ export default function App() {
     } catch { /* ignore */ }
   };
 
-  // Called by ChatPanel when the backend auto-creates a new conversation
+  // Called by ChatPanel when the backend creates a new conversation
   const handleConversationCreated = (id, title) => {
     setActiveConvId(id);
-    setConversations((prev) => [
-      { id, title, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-      ...prev,
-    ]);
+    setConversations((prev) => {
+      // Avoid duplicates
+      if (prev.find((c) => c.id === id)) return prev;
+      return [
+        { id, title, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+        ...prev,
+      ];
+    });
   };
 
   // ── Auth gate ────────────────────────────────────────────────────────────────
@@ -102,54 +104,26 @@ export default function App() {
 
       {sidebarOpen && <div className="overlay" onClick={() => setSidebar(false)} />}
 
-      {/* ── Sidebar ── */}
+      {/* ── Left sidebar: navigation only ── */}
       <aside className={`sidebar${sidebarOpen ? " open" : ""}`}>
 
-        {/* Brand */}
         <div style={s.brand}>
           <div style={s.logoIcon}>L</div>
           <span style={s.logoText}>Lexorion</span>
           <button className="sidebar-close" style={s.closeBtn} onClick={() => setSidebar(false)}>✕</button>
         </div>
 
-        {/* New Chat button */}
-        <div style={s.newChatWrap}>
+        <nav style={s.nav}>
           <button style={s.newChatBtn} onClick={handleNewChat}>
-            <span style={{ fontSize: 17, lineHeight: 1, marginRight: 2 }}>+</span>
             New Chat
           </button>
-        </div>
 
-        {/* Conversation list */}
-        <div style={s.convList}>
-          {isLoggedIn && conversations.length > 0 ? (
-            conversations.map((c) => (
-              <div
-                key={c.id}
-                style={c.id === activeConversationId ? s.convItemActive : s.convItem}
-                onClick={() => handleSelectConv(c.id)}
-                title={c.title}
-              >
-                <span style={s.convTitle}>{c.title}</span>
-                <button
-                  style={s.convDelete}
-                  onClick={(e) => handleDeleteConv(e, c.id)}
-                  title="Delete"
-                >✕</button>
-              </div>
-            ))
-          ) : isLoggedIn ? (
-            <p style={s.noConvs}>No conversations yet.<br />Start chatting!</p>
-          ) : (
-            <p style={s.noConvs}>
-              <span style={{ fontSize: 22, display: "block", marginBottom: 8 }}>💬</span>
-              Sign in to save<br />your chat history.
-            </p>
-          )}
-        </div>
+          <div style={s.navDivider} />
 
-        {/* Bottom nav — Documents & Search */}
-        <nav style={s.bottomNav}>
+          <button
+            style={tab === "chat" ? s.navActive : s.navItem}
+            onClick={() => { setTab("chat"); setSidebar(false); }}
+          >Chat</button>
           <button
             style={tab === "documents" ? s.navActive : s.navItem}
             onClick={() => { setTab("documents"); setSidebar(false); }}
@@ -160,7 +134,6 @@ export default function App() {
           >Search</button>
         </nav>
 
-        {/* Footer */}
         <div style={s.sidebarFooter}>
           {isLoggedIn ? (
             <div style={s.userRow}>
@@ -168,10 +141,7 @@ export default function App() {
               <button style={s.logoutBtn} onClick={handleLogout} title="Sign out">⎋</button>
             </div>
           ) : (
-            <button
-              style={s.signInPrompt}
-              onClick={() => { setGuestMode(false); setAuthView("login"); }}
-            >
+            <button style={s.signInPrompt} onClick={() => { setGuestMode(false); setAuthView("login"); }}>
               Sign in to save history →
             </button>
           )}
@@ -179,7 +149,7 @@ export default function App() {
         </div>
       </aside>
 
-      {/* ── Main ── */}
+      {/* ── Center: main content ── */}
       <main className="main-area">
 
         {/* Mobile topbar */}
@@ -189,12 +159,9 @@ export default function App() {
             <div style={{ ...s.logoIcon, width: 28, height: 28, fontSize: 13 }}>L</div>
             <span style={{ fontSize: 15, fontWeight: 700, color: "#111827" }}>Lexorion</span>
           </div>
-          {tab === "chat" && (
-            <button style={s.uploadBtnSm} onClick={handleNewChat}>+ New</button>
-          )}
+          <button style={s.newChatSm} onClick={handleNewChat}>New Chat</button>
         </div>
 
-        {/* Content */}
         <div className="content-area">
           {tab === "chat" && (
             <ChatPanel
@@ -204,10 +171,51 @@ export default function App() {
               onUploadClick={() => setTab("documents")}
             />
           )}
-          {tab === "documents" && <UploadPanel onDocumentsChange={setDocuments} />}
+          {tab === "documents" && <UploadPanel onDocumentsChange={() => {}} />}
           {tab === "search"    && <SearchPanel />}
         </div>
       </main>
+
+      {/* ── Right panel: conversation history ── */}
+      <aside className="history-panel">
+        <div className="history-panel-header">History</div>
+        <div className="history-list">
+          {isLoggedIn ? (
+            conversations.length > 0 ? (
+              conversations.map((c) => (
+                <button
+                  key={c.id}
+                  className={`history-item${c.id === activeConversationId ? " active" : ""}`}
+                  onClick={() => handleSelectConv(c.id)}
+                  title={c.title}
+                >
+                  <span className="history-item-title">{c.title}</span>
+                  <span
+                    className="history-item-delete"
+                    onClick={(e) => handleDeleteConv(e, c.id)}
+                    title="Delete"
+                  >✕</span>
+                </button>
+              ))
+            ) : (
+              <p className="history-empty">
+                No conversations yet.<br />Start chatting to<br />see your history here.
+              </p>
+            )
+          ) : (
+            <p className="history-empty">
+              <span style={{ fontSize: 24, display: "block", marginBottom: 10 }}>💬</span>
+              Sign in to save<br />your chat history.
+              <br /><br />
+              <button
+                style={s.signInSmall}
+                onClick={() => { setGuestMode(false); setAuthView("login"); }}
+              >Sign in</button>
+            </p>
+          )}
+        </div>
+      </aside>
+
     </div>
   );
 }
@@ -215,71 +223,43 @@ export default function App() {
 const s = {
   brand: {
     display: "flex", alignItems: "center", gap: 10,
-    padding: "18px 16px", borderBottom: "1px solid #2a2a2a", flexShrink: 0,
+    padding: "18px 14px", borderBottom: "1px solid #2a2a2a", flexShrink: 0,
   },
   logoIcon: {
-    width: 32, height: 32, borderRadius: 9, background: "#d97706",
+    width: 30, height: 30, borderRadius: 8, background: "#d97706",
     display: "flex", alignItems: "center", justifyContent: "center",
-    color: "#fff", fontWeight: 800, fontSize: 15, flexShrink: 0,
+    color: "#fff", fontWeight: 800, fontSize: 14, flexShrink: 0,
   },
-  logoText: { flex: 1, fontSize: 19, fontWeight: 700, color: "#f5f5f5", letterSpacing: "-0.3px" },
+  logoText: { flex: 1, fontSize: 17, fontWeight: 700, color: "#f5f5f5", letterSpacing: "-0.3px" },
   closeBtn: {
     background: "transparent", border: "none", color: "#666",
-    fontSize: 16, cursor: "pointer", padding: 4, lineHeight: 1,
-    borderRadius: 6, flexShrink: 0,
+    fontSize: 16, cursor: "pointer", padding: 4, borderRadius: 6, flexShrink: 0,
   },
-  newChatWrap: { padding: "10px 10px 6px", flexShrink: 0 },
+  nav: {
+    flex: 1, padding: "12px 10px",
+    display: "flex", flexDirection: "column", gap: 2,
+  },
   newChatBtn: {
-    display: "flex", alignItems: "center", gap: 8, width: "100%",
-    padding: "9px 12px", borderRadius: 8, border: "1px solid #2a2a2a",
-    background: "transparent", color: "#f5f5f5", fontSize: 14,
-    fontWeight: 500, cursor: "pointer",
+    width: "100%", padding: "10px 12px",
+    background: "#d97706", color: "#fff",
+    border: "none", borderRadius: 8, fontSize: 13,
+    fontWeight: 600, cursor: "pointer", textAlign: "left",
+    marginBottom: 4,
   },
-  convList: {
-    flex: 1, overflowY: "auto", padding: "4px 10px",
-    display: "flex", flexDirection: "column", gap: 1,
-  },
-  convItem: {
-    display: "flex", alignItems: "center", gap: 6,
-    padding: "9px 10px", borderRadius: 8, cursor: "pointer",
-    color: "#9ca3af", fontSize: 13,
-    background: "transparent",
-  },
-  convItemActive: {
-    display: "flex", alignItems: "center", gap: 6,
-    padding: "9px 10px", borderRadius: 8, cursor: "pointer",
-    color: "#f5f5f5", fontSize: 13, fontWeight: 500,
-    background: "#2a2a2a",
-  },
-  convTitle: {
-    flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-  },
-  convDelete: {
-    background: "transparent", border: "none", color: "#6b7280",
-    fontSize: 10, cursor: "pointer", padding: "2px 4px", lineHeight: 1,
-    borderRadius: 4, flexShrink: 0,
-  },
-  noConvs: {
-    fontSize: 12, color: "#4b5563", textAlign: "center",
-    padding: "28px 12px", lineHeight: 1.9,
-  },
-  bottomNav: {
-    padding: "8px 10px", borderTop: "1px solid #2a2a2a",
-    display: "flex", flexDirection: "column", gap: 2, flexShrink: 0,
-  },
+  navDivider: { height: 1, background: "#2a2a2a", margin: "6px 2px 8px" },
   navItem: {
-    display: "flex", alignItems: "center",
-    padding: "10px 12px", borderRadius: 8, border: "none",
-    background: "transparent", color: "#9ca3af", fontSize: 14,
-    fontWeight: 500, cursor: "pointer", textAlign: "left", width: "100%",
+    display: "flex", alignItems: "center", width: "100%",
+    padding: "9px 12px", borderRadius: 8, border: "none",
+    background: "transparent", color: "#9ca3af", fontSize: 13,
+    fontWeight: 500, cursor: "pointer", textAlign: "left",
   },
   navActive: {
-    display: "flex", alignItems: "center",
-    padding: "10px 12px", borderRadius: 8, border: "none",
-    background: "#2a2a2a", color: "#f5f5f5", fontSize: 14,
-    fontWeight: 600, cursor: "pointer", textAlign: "left", width: "100%",
+    display: "flex", alignItems: "center", width: "100%",
+    padding: "9px 12px", borderRadius: 8, border: "none",
+    background: "#2a2a2a", color: "#f5f5f5", fontSize: 13,
+    fontWeight: 600, cursor: "pointer", textAlign: "left",
   },
-  sidebarFooter: { padding: "12px 16px", borderTop: "1px solid #2a2a2a", flexShrink: 0 },
+  sidebarFooter: { padding: "12px 14px", borderTop: "1px solid #2a2a2a", flexShrink: 0 },
   userRow: { display: "flex", alignItems: "center", gap: 6, marginBottom: 6, minWidth: 0 },
   userEmail: {
     flex: 1, fontSize: 11, color: "#6b7280",
@@ -288,20 +268,25 @@ const s = {
   logoutBtn: {
     background: "transparent", border: "1px solid #2a2a2a",
     borderRadius: 6, color: "#6b7280", cursor: "pointer",
-    fontSize: 14, lineHeight: 1, padding: "3px 6px", flexShrink: 0,
+    fontSize: 13, lineHeight: 1, padding: "3px 6px", flexShrink: 0,
   },
   signInPrompt: {
     width: "100%", padding: "8px 10px", background: "transparent",
     border: "1px solid #2a2a2a", borderRadius: 8,
-    color: "#d97706", fontSize: 12, fontWeight: 600,
+    color: "#d97706", fontSize: 11, fontWeight: 600,
     cursor: "pointer", marginBottom: 6, textAlign: "left",
+  },
+  signInSmall: {
+    padding: "6px 14px", background: "#d97706", color: "#fff",
+    border: "none", borderRadius: 8, fontSize: 12, fontWeight: 600,
+    cursor: "pointer",
   },
   poweredBy: { fontSize: 10, color: "#404040", letterSpacing: "0.02em" },
   hamburger: {
     background: "transparent", border: "none", fontSize: 20,
-    cursor: "pointer", color: "#374151", padding: 4, lineHeight: 1, flexShrink: 0,
+    cursor: "pointer", color: "#374151", padding: 4, flexShrink: 0,
   },
-  uploadBtnSm: {
+  newChatSm: {
     padding: "6px 12px", background: "#d97706", color: "#fff",
     border: "none", borderRadius: 8, fontSize: 12, fontWeight: 600,
     cursor: "pointer", flexShrink: 0,
