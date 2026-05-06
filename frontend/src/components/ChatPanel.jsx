@@ -235,7 +235,7 @@ export default function ChatPanel({ conversationId, isGuest, onConversationCreat
       <div className="chat-input-wrap">
         {isGuest && (
           <div className="chat-banner" style={s.guestBanner}>
-            💡 You're in guest mode — history won't be saved.
+            You're in guest mode. History won't be saved.
           </div>
         )}
 
