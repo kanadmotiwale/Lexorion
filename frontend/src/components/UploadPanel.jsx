@@ -4,6 +4,7 @@ import { uploadDocument, listDocuments, deleteDocument } from "../api/client";
 export default function UploadPanel({ onDocumentsChange }) {
   const [documents, setDocuments] = useState([]);
   const [uploading, setUploading]  = useState(false);
+  const [loadingDocs, setLoadingDocs] = useState(true);
   const [progress, setProgress]    = useState(0);
   const [error, setError]          = useState(null);
   const [success, setSuccess]      = useState(null);
@@ -12,13 +13,15 @@ export default function UploadPanel({ onDocumentsChange }) {
 
   useEffect(() => { fetchDocs(); }, []);
 
-  const fetchDocs = async () => {
+  const fetchDocs = async (showSpinner = true) => {
+    if (showSpinner) setLoadingDocs(true);
     try {
       const data = await listDocuments();
       const docs = data.documents || [];
       setDocuments(docs);
       onDocumentsChange?.(docs);
     } catch {}
+    finally { setLoadingDocs(false); }
   };
 
   const handleUpload = async (file) => {
@@ -28,7 +31,7 @@ export default function UploadPanel({ onDocumentsChange }) {
         setProgress(Math.round((e.loaded * 100) / e.total))
       );
       setSuccess(`"${file.name}" indexed successfully!`);
-      await fetchDocs();
+      await fetchDocs(false);
     } catch (err) {
       setError(err.response?.data?.detail || "Upload failed. Please try again.");
     } finally {
@@ -39,7 +42,7 @@ export default function UploadPanel({ onDocumentsChange }) {
 
   const handleDelete = async (id, name) => {
     if (!confirm(`Delete "${name}"?`)) return;
-    try { await deleteDocument(id); await fetchDocs(); setSuccess("Document deleted."); }
+    try { await deleteDocument(id); await fetchDocs(false); setSuccess("Document deleted."); }
     catch { setError("Delete failed."); }
   };
 
@@ -125,7 +128,11 @@ export default function UploadPanel({ onDocumentsChange }) {
             <span style={{ flex: 0, width: 40, textAlign: "center" }}></span>
           </div>
 
-          {documents.length === 0 ? (
+          {loadingDocs ? (
+            <div style={s.empty}>
+              <div style={{ width: 24, height: 24, border: "3px solid #f0f0f0", borderTopColor: "#d97706", borderRadius: "50%", animation: "spin 0.7s linear infinite", margin: "0 auto" }} />
+            </div>
+          ) : documents.length === 0 ? (
             <div style={s.empty}>
               <p style={{ fontSize: 28, marginBottom: 8 }}>📭</p>
               <p style={{ fontWeight: 600, color: "#374151", marginBottom: 4 }}>No documents yet</p>
