@@ -151,7 +151,6 @@ textarea:focus, input:focus {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
   padding: 12px 14px;
   border-radius: 8px;
   cursor: pointer;
@@ -174,6 +173,13 @@ textarea:focus, input:focus {
   font-weight: 600;
 }
 
+.history-item-body {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+}
+
 .history-item-icon {
   font-size: 16px;
   opacity: 0.5;
@@ -184,8 +190,7 @@ textarea:focus, input:focus {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 160px;
-  text-align: center;
+  font-size: 15px;
 }
 
 .history-item-delete {

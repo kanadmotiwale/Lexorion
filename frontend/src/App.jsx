@@ -188,8 +188,10 @@ export default function App() {
                   onClick={() => handleSelectConv(c.id)}
                   title={c.title}
                 >
-                  <span className="history-item-icon">◆</span>
-                  <span className="history-item-title">{c.title}</span>
+                  <span className="history-item-body">
+                    <span className="history-item-icon">◆</span>
+                    <span className="history-item-title">{c.title}</span>
+                  </span>
                   <span
                     className="history-item-delete"
                     onClick={(e) => handleDeleteConv(e, c.id)}
