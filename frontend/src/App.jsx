@@ -9,7 +9,7 @@ import { listConversations, deleteConversation } from "./api/client";
 
 export default function App() {
   const [session, setSession]                   = useState(undefined);
-  const [guestMode, setGuestMode]               = useState(false);
+  const [guestMode, setGuestMode]               = useState(true);
   const [authView, setAuthView]                 = useState("login");
 
   const [tab, setTab]                           = useState("chat");
@@ -168,6 +168,7 @@ export default function App() {
               isGuest={!isLoggedIn}
               onConversationCreated={handleConversationCreated}
               onUploadClick={() => setTab("documents")}
+              onRequestAuth={(view) => { setGuestMode(false); setAuthView(view || "login"); }}
             />
           )}
           {tab === "documents" && <UploadPanel onDocumentsChange={() => {}} />}

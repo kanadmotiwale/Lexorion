@@ -9,13 +9,14 @@ const WELCOME = {
   confidence: null,
 };
 
-export default function ChatPanel({ conversationId, isGuest, onConversationCreated, onUploadClick }) {
+export default function ChatPanel({ conversationId, isGuest, onConversationCreated, onUploadClick, onRequestAuth }) {
   const [messages, setMessages]             = useState([WELCOME]);
   const [input, setInput]                   = useState("");
   const [loading, setLoading]               = useState(false);
   const [uploading, setUploading]           = useState(false);
   const [uploadName, setUploadName]         = useState(null);
   const [loadingHistory, setLoadingHistory] = useState(false);
+  const [showWelcome, setShowWelcome]       = useState(true);
   // Track conversations we created ourselves so we don't re-fetch them
   // (which would wipe the current messages off the screen)
   const justCreatedRef = useRef(null);
@@ -157,6 +158,23 @@ export default function ChatPanel({ conversationId, isGuest, onConversationCreat
           <div style={s.heroAvatar}>L</div>
           <h2 style={s.heroTitle}>Hi, I'm Lexorion</h2>
           <p style={s.heroSub}>Upload your documents and ask me anything about them.</p>
+
+          {/* Guest welcome card */}
+          {isGuest && showWelcome && (
+            <div style={s.welcomeCard}>
+              <p style={s.welcomeTitle}>Save your progress</p>
+              <p style={s.welcomeSub}>
+                Sign in to keep your chat history and documents across sessions.
+              </p>
+              <div style={s.welcomeBtns}>
+                <button style={s.wSignIn} onClick={() => onRequestAuth?.("login")}>Sign in</button>
+                <button style={s.wSignUp} onClick={() => onRequestAuth?.("signup")}>Create account</button>
+              </div>
+              <button style={s.wGuest} onClick={() => setShowWelcome(false)}>
+                Continue as guest
+              </button>
+            </div>
+          )}
         </div>
       ) : null}
 
@@ -329,6 +347,38 @@ const s = {
     fontSize: 15, color: "#6b7280", lineHeight: "1.65", maxWidth: 360,
   },
 
+  /* Guest welcome card */
+  welcomeCard: {
+    marginTop: 28, width: "100%", maxWidth: 360,
+    background: "#fff", border: "1px solid #e5e7eb",
+    borderRadius: 16, padding: "24px 24px 20px",
+    boxShadow: "0 4px 24px rgba(0,0,0,0.07)",
+    display: "flex", flexDirection: "column", alignItems: "center", gap: 6,
+  },
+  welcomeTitle: {
+    fontSize: 15, fontWeight: 700, color: "#111827", marginBottom: 2,
+  },
+  welcomeSub: {
+    fontSize: 13, color: "#6b7280", lineHeight: "1.6",
+    textAlign: "center", marginBottom: 8,
+  },
+  welcomeBtns: { display: "flex", gap: 8, width: "100%" },
+  wSignIn: {
+    flex: 1, padding: "10px", background: "#d97706", color: "#fff",
+    border: "none", borderRadius: 10, fontSize: 13, fontWeight: 600,
+    cursor: "pointer",
+  },
+  wSignUp: {
+    flex: 1, padding: "10px", background: "transparent", color: "#d97706",
+    border: "1px solid #d97706", borderRadius: 10, fontSize: 13, fontWeight: 600,
+    cursor: "pointer",
+  },
+  wGuest: {
+    marginTop: 6, background: "transparent", border: "none",
+    color: "#9ca3af", fontSize: 12, cursor: "pointer",
+    textDecoration: "underline", padding: "4px",
+  },
+
   aiAvatar: {
     width: 34, height: 34, borderRadius: 10, background: "#d97706",
     display: "flex", alignItems: "center", justifyContent: "center",
@@ -356,7 +406,7 @@ const s = {
     fontSize: 12, color: "#6b7280", background: "#f9fafb",
     border: "1px solid #e5e7eb", borderRadius: 8,
     padding: "7px 12px", marginBottom: 8,
-    maxWidth: 780, margin: "0 auto 8px",
+    maxWidth: 780, margin: "0 auto 8px", textAlign: "center",
   },
   uploadBanner: {
     display: "flex", alignItems: "center", gap: 10,
