@@ -142,7 +142,7 @@ export default function ChatPanel({ conversationId, isGuest, onConversationCreat
   if (loadingHistory) {
     return (
       <div style={{ ...s.wrap, alignItems: "center", justifyContent: "center" }}>
-        <div style={{ width: 28, height: 28, border: "3px solid #f0f0f0", borderTopColor: "#46dcf0", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
+        <div style={{ width: 28, height: 28, border: "3px solid #f0f0f0", borderTopColor: "#1142d4", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
       </div>
     );
   }
@@ -334,7 +334,7 @@ const s = {
     padding: "0 24px", textAlign: "center", userSelect: "none",
   },
   heroAvatar: {
-    width: 56, height: 56, borderRadius: 16, background: "#46dcf0",
+    width: 56, height: 56, borderRadius: 16, background: "#1142d4",
     display: "flex", alignItems: "center", justifyContent: "center",
     color: "#fff", fontWeight: 800, fontSize: 24, marginBottom: 20,
     boxShadow: "0 8px 24px rgba(217,119,6,0.25)",
@@ -364,13 +364,13 @@ const s = {
   },
   welcomeBtns: { display: "flex", gap: 8, width: "100%" },
   wSignIn: {
-    flex: 1, padding: "10px", background: "#46dcf0", color: "#fff",
+    flex: 1, padding: "10px", background: "#1142d4", color: "#fff",
     border: "none", borderRadius: 10, fontSize: 13, fontWeight: 600,
     cursor: "pointer",
   },
   wSignUp: {
-    flex: 1, padding: "10px", background: "transparent", color: "#46dcf0",
-    border: "1px solid #46dcf0", borderRadius: 10, fontSize: 13, fontWeight: 600,
+    flex: 1, padding: "10px", background: "transparent", color: "#1142d4",
+    border: "1px solid #1142d4", borderRadius: 10, fontSize: 13, fontWeight: 600,
     cursor: "pointer",
   },
   wGuest: {
@@ -380,7 +380,7 @@ const s = {
   },
 
   aiAvatar: {
-    width: 34, height: 34, borderRadius: 10, background: "#46dcf0",
+    width: 34, height: 34, borderRadius: 10, background: "#1142d4",
     display: "flex", alignItems: "center", justifyContent: "center",
     color: "#fff", fontWeight: 800, fontSize: 14, flexShrink: 0, marginTop: 2,
   },
@@ -389,17 +389,17 @@ const s = {
   sources: { display: "flex", flexWrap: "wrap", gap: 6, marginTop: 12 },
   sourceChip: {
     fontSize: 11, padding: "3px 9px", borderRadius: 20,
-    background: "#ecfeff", color: "#0e7490",
-    border: "1px solid #a5f3fc", fontWeight: 500,
+    background: "#eef2ff", color: "#1e3a8a",
+    border: "1px solid #a5b4fc", fontWeight: 500,
   },
   chunkNum: { opacity: 0.6 },
   confRow: { display: "flex", alignItems: "center", gap: 8, marginTop: 10 },
   confTrack: { height: 3, width: 64, background: "#e5e7eb", borderRadius: 99, overflow: "hidden" },
-  confFill: { height: "100%", background: "#46dcf0", borderRadius: 99, transition: "width 0.3s" },
+  confFill: { height: "100%", background: "#1142d4", borderRadius: 99, transition: "width 0.3s" },
   confLabel: { fontSize: 11, color: "#9ca3af" },
   dots: { display: "flex", gap: 5, padding: "8px 0" },
   dot: {
-    width: 7, height: 7, borderRadius: "50%", background: "#46dcf0",
+    width: 7, height: 7, borderRadius: "50%", background: "#1142d4",
     animation: "dotBounce 1.2s ease infinite", display: "inline-block",
   },
   guestBanner: {
@@ -410,14 +410,14 @@ const s = {
   },
   uploadBanner: {
     display: "flex", alignItems: "center", gap: 10,
-    background: "#ecfeff", border: "1px solid #a5f3fc",
+    background: "#eef2ff", border: "1px solid #a5b4fc",
     borderRadius: 10, padding: "8px 14px",
-    fontSize: 13, color: "#0e7490", fontWeight: 500,
+    fontSize: 13, color: "#1e3a8a", fontWeight: 500,
     maxWidth: 780, margin: "0 auto 8px",
   },
   uploadSpinner: {
     width: 14, height: 14, borderRadius: "50%",
-    border: "2px solid #a5f3fc", borderTopColor: "#46dcf0",
+    border: "2px solid #a5b4fc", borderTopColor: "#1142d4",
     animation: "spin 0.7s linear infinite", flexShrink: 0,
   },
   textarea: {
@@ -436,7 +436,7 @@ const s = {
     display: "flex", alignItems: "center", justifyContent: "center",
   },
   sendBtn: {
-    width: 36, height: 36, borderRadius: 10, background: "#46dcf0", color: "#fff",
+    width: 36, height: 36, borderRadius: 10, background: "#1142d4", color: "#fff",
     border: "none", cursor: "pointer", flexShrink: 0,
     display: "flex", alignItems: "center", justifyContent: "center",
   },

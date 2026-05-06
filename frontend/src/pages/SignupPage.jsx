@@ -160,7 +160,7 @@ const s = {
   },
   logoIcon: {
     width: 36, height: 36, borderRadius: 10,
-    background: "#46dcf0", color: "#fff",
+    background: "#1142d4", color: "#fff",
     display: "flex", alignItems: "center", justifyContent: "center",
     fontWeight: 800, fontSize: 17,
   },
@@ -195,19 +195,19 @@ const s = {
     fontSize: 13, color: "#dc2626", fontWeight: 500,
   },
   submit: {
-    padding: "12px", background: "#46dcf0", color: "#fff",
+    padding: "12px", background: "#1142d4", color: "#fff",
     border: "none", borderRadius: 10, fontSize: 15,
     fontWeight: 600, cursor: "pointer", marginTop: 4,
   },
   submitOff: {
-    padding: "12px", background: "#a5f3fc", color: "#fff",
+    padding: "12px", background: "#a5b4fc", color: "#fff",
     border: "none", borderRadius: 10, fontSize: 15,
     fontWeight: 600, cursor: "not-allowed", marginTop: 4,
   },
   switchText: { textAlign: "center", fontSize: 13, color: "#6b7280", marginTop: 22 },
   switchBtn: {
     background: "transparent", border: "none",
-    color: "#46dcf0", fontWeight: 600, cursor: "pointer",
+    color: "#1142d4", fontWeight: 600, cursor: "pointer",
     fontSize: 13, padding: 0,
   },
   divider: { display: "flex", alignItems: "center", gap: 10, marginTop: 20 },
