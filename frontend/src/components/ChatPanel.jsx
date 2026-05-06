@@ -146,10 +146,22 @@ export default function ChatPanel({ conversationId, isGuest, onConversationCreat
     );
   }
 
+  // True when only the welcome message is visible — show centered hero state
+  const isEmpty = messages.length === 1 && messages[0].role === "ai" && !loading;
+
   return (
     <div style={s.wrap}>
-      {/* Messages */}
-      <div style={s.messages}>
+      {/* ── Empty / hero state — centered greeting ── */}
+      {isEmpty ? (
+        <div style={s.hero}>
+          <div style={s.heroAvatar}>L</div>
+          <h2 style={s.heroTitle}>Hi, I'm Lexorion</h2>
+          <p style={s.heroSub}>Upload your documents and ask me anything about them.</p>
+        </div>
+      ) : null}
+
+      {/* ── Messages (hidden when empty, visible once chat starts) ── */}
+      <div style={{ ...s.messages, display: isEmpty ? "none" : "flex" }}>
         {messages.map((msg, i) => (
           <div key={i} className="msg-enter" style={msg.role === "user" ? s.userRow : s.aiRow}>
             {msg.role === "ai" ? (
@@ -297,6 +309,27 @@ if (!document.querySelector("#dot-style")) {
 
 const s = {
   wrap: { display: "flex", flexDirection: "column", height: "100%", background: "#fff" },
+
+  /* Centered empty state */
+  hero: {
+    flex: 1, display: "flex", flexDirection: "column",
+    alignItems: "center", justifyContent: "center",
+    padding: "0 24px", textAlign: "center", userSelect: "none",
+  },
+  heroAvatar: {
+    width: 56, height: 56, borderRadius: 16, background: "#d97706",
+    display: "flex", alignItems: "center", justifyContent: "center",
+    color: "#fff", fontWeight: 800, fontSize: 24, marginBottom: 20,
+    boxShadow: "0 8px 24px rgba(217,119,6,0.25)",
+  },
+  heroTitle: {
+    fontSize: 26, fontWeight: 700, color: "#111827",
+    marginBottom: 10, letterSpacing: "-0.3px",
+  },
+  heroSub: {
+    fontSize: 15, color: "#6b7280", lineHeight: "1.65", maxWidth: 360,
+  },
+
   messages: {
     flex: 1, overflowY: "auto", padding: "32px 0 16px",
     display: "flex", flexDirection: "column", gap: 0,
