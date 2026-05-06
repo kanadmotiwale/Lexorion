@@ -91,12 +91,7 @@ export default function App() {
     );
   }
 
-  if (!session && !guestMode) {
-    if (authView === "signup") {
-      return <SignupPage onSwitch={() => setAuthView("login")} onGuest={() => setGuestMode(true)} />;
-    }
-    return <LoginPage onSwitch={() => setAuthView("signup")} onGuest={() => setGuestMode(true)} />;
-  }
+  // Auth modal rendered as overlay on top of the app (see bottom of JSX)
 
   // ── Main app ─────────────────────────────────────────────────────────────────
   return (
@@ -234,6 +229,13 @@ export default function App() {
           ) : null}
         </div>
       </aside>
+
+      {/* ── Auth modal overlay ── */}
+      {!session && !guestMode && (
+        authView === "signup"
+          ? <SignupPage onSwitch={() => setAuthView("login")} onGuest={() => setGuestMode(true)} />
+          : <LoginPage  onSwitch={() => setAuthView("signup")} onGuest={() => setGuestMode(true)} />
+      )}
 
     </div>
   );

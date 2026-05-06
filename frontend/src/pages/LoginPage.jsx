@@ -85,7 +85,11 @@ export default function LoginPage({ onSwitch, onGuest }) {
           </button>
         </p>
 
-        <div style={s.divider}><span style={s.dividerText}>or</span></div>
+        <div style={s.divider}>
+          <div style={s.dividerLine} />
+          <span style={s.dividerText}>or</span>
+          <div style={s.dividerLine} />
+        </div>
 
         <button style={s.guestBtn} onClick={onGuest}>
           Continue as guest
@@ -98,9 +102,11 @@ export default function LoginPage({ onSwitch, onGuest }) {
 
 const s = {
   root: {
-    height: "100dvh", display: "flex",
-    alignItems: "center", justifyContent: "center",
-    background: "#0f0f0f",
+    position: "fixed", inset: 0, zIndex: 100,
+    display: "flex", alignItems: "center", justifyContent: "center",
+    background: "rgba(0,0,0,0.55)",
+    backdropFilter: "blur(8px)",
+    WebkitBackdropFilter: "blur(8px)",
   },
   card: {
     width: "100%", maxWidth: 420,
@@ -162,10 +168,9 @@ const s = {
   divider: {
     display: "flex", alignItems: "center", gap: 10, marginTop: 20,
   },
+  dividerLine: { flex: 1, height: 1, background: "#e5e7eb" },
   dividerText: {
-    fontSize: 12, color: "#9ca3af", flexShrink: 0,
-    padding: "0 4px",
-    background: "#fff",
+    fontSize: 12, color: "#9ca3af", flexShrink: 0, padding: "0 4px",
   },
   guestBtn: {
     width: "100%", padding: "11px", background: "transparent",
