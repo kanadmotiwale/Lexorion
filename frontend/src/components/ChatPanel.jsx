@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import ReactMarkdown from "react-markdown";
 import { sendMessage, uploadDocument, getConversationMessages } from "../api/client";
 
 const WELCOME = {
@@ -148,7 +149,25 @@ export default function ChatPanel({ conversationId, isGuest, onConversationCreat
               <>
                 <div style={s.aiAvatar}>L</div>
                 <div style={s.aiBody}>
-                  <p style={s.aiText}>{msg.text}</p>
+                  <div style={s.aiText}>
+                    <ReactMarkdown
+                      components={{
+                        p:      ({children}) => <p style={s.mdP}>{children}</p>,
+                        strong: ({children}) => <strong style={s.mdStrong}>{children}</strong>,
+                        ul:     ({children}) => <ul style={s.mdUl}>{children}</ul>,
+                        ol:     ({children}) => <ol style={s.mdOl}>{children}</ol>,
+                        li:     ({children}) => <li style={s.mdLi}>{children}</li>,
+                        h1:     ({children}) => <h1 style={s.mdH}>{children}</h1>,
+                        h2:     ({children}) => <h2 style={{...s.mdH, fontSize:16}}>{children}</h2>,
+                        h3:     ({children}) => <h3 style={{...s.mdH, fontSize:15}}>{children}</h3>,
+                        code:   ({children}) => <code style={s.mdCode}>{children}</code>,
+                        pre:    ({children}) => <pre style={s.mdPre}>{children}</pre>,
+                        hr:     () => <hr style={s.mdHr} />,
+                      }}
+                    >
+                      {msg.text}
+                    </ReactMarkdown>
+                  </div>
                   {msg.sources?.length > 0 && (
                     <div style={s.sources}>
                       {msg.sources.slice(0, 4).map((src, j) => (
@@ -285,7 +304,6 @@ const s = {
     color: "#fff", fontWeight: 800, fontSize: 14, flexShrink: 0, marginTop: 2,
   },
   aiBody: { flex: 1, minWidth: 0 },
-  aiText: { fontSize: 15, lineHeight: "1.75", color: "#111827", whiteSpace: "pre-wrap", margin: 0 },
   userRow: {
     display: "flex", justifyContent: "flex-end",
     padding: "12px 24px", maxWidth: 780, width: "100%", margin: "0 auto",
@@ -362,4 +380,23 @@ const s = {
     display: "flex", alignItems: "center", justifyContent: "center",
   },
   hint: { fontSize: 11, color: "#d1d5db", textAlign: "center", marginTop: 8 },
+
+  /* Markdown rendering */
+  aiText:   { fontSize: 15, lineHeight: "1.75", color: "#111827" },
+  mdP:      { margin: "0 0 10px", lineHeight: "1.75" },
+  mdStrong: { fontWeight: 650, color: "#111827" },
+  mdUl:     { margin: "4px 0 10px", paddingLeft: 20 },
+  mdOl:     { margin: "4px 0 10px", paddingLeft: 20 },
+  mdLi:     { margin: "3px 0", lineHeight: "1.65" },
+  mdH:      { fontSize: 17, fontWeight: 700, color: "#111827", margin: "14px 0 6px" },
+  mdCode:   {
+    fontFamily: "ui-monospace, monospace", fontSize: 13,
+    background: "#f3f4f6", borderRadius: 4, padding: "1px 5px", color: "#374151",
+  },
+  mdPre:    {
+    background: "#f3f4f6", borderRadius: 8, padding: "12px 16px",
+    overflowX: "auto", fontSize: 13, margin: "8px 0",
+    fontFamily: "ui-monospace, monospace",
+  },
+  mdHr:     { border: "none", borderTop: "1px solid #e5e7eb", margin: "12px 0" },
 };
