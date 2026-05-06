@@ -278,10 +278,10 @@ const s = {
     background: "#2a2a2a", color: "#f5f5f5", fontSize: 13,
     fontWeight: 600, cursor: "pointer", textAlign: "left",
   },
-  sidebarFooter: { padding: "12px 14px", borderTop: "1px solid #2a2a2a", flexShrink: 0 },
-  userRow: { display: "flex", alignItems: "center", gap: 6, marginBottom: 6, minWidth: 0 },
+  sidebarFooter: { padding: "12px 14px", borderTop: "1px solid #2a2a2a", flexShrink: 0, textAlign: "center" },
+  userRow: { display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginBottom: 6, minWidth: 0 },
   userEmail: {
-    flex: 1, fontSize: 11, color: "#6b7280",
+    fontSize: 11, color: "#6b7280",
     overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
   },
   logoutBtn: {
