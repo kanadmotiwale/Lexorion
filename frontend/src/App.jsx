@@ -182,6 +182,7 @@ export default function App() {
           <span className="history-panel-header-dot" />
           <span className="history-panel-header-label">History</span>
         </div>
+
         <div className="history-list">
           {isLoggedIn ? (
             conversations.length > 0 ? (
@@ -217,6 +218,21 @@ export default function App() {
               >Sign in</button>
             </p>
           )}
+        </div>
+
+        {/* Right panel footer */}
+        <div style={s.historyFooter}>
+          {isLoggedIn ? (
+            <button style={s.signOutBtn} onClick={handleLogout}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                <polyline points="16 17 21 12 16 7"/>
+                <line x1="21" y1="12" x2="9" y2="12"/>
+              </svg>
+              Sign out
+            </button>
+          ) : null}
         </div>
       </aside>
 
@@ -294,5 +310,16 @@ const s = {
     padding: "6px 12px", background: "#d97706", color: "#fff",
     border: "none", borderRadius: 8, fontSize: 12, fontWeight: 600,
     cursor: "pointer", flexShrink: 0,
+  },
+  historyFooter: {
+    padding: "12px 14px", borderTop: "1px solid #2a2a2a", flexShrink: 0,
+  },
+  signOutBtn: {
+    display: "flex", alignItems: "center", gap: 7,
+    width: "100%", padding: "9px 12px",
+    background: "transparent", border: "1px solid #2a2a2a",
+    borderRadius: 8, color: "#9ca3af", fontSize: 12,
+    fontWeight: 500, cursor: "pointer", textAlign: "left",
+    transition: "border-color 0.15s, color 0.15s",
   },
 };
