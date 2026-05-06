@@ -20,12 +20,18 @@ const api = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
-// Attach JWT for logged-in users, or X-Guest-Id for guests
+// Attach JWT for logged-in users, or X-Guest-Id for guests.
+// Wrapped in try/catch so a Supabase outage doesn't kill all API requests.
 api.interceptors.request.use(async (config) => {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (session?.access_token) {
-    config.headers.Authorization = `Bearer ${session.access_token}`;
-  } else {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.access_token) {
+      config.headers.Authorization = `Bearer ${session.access_token}`;
+    } else {
+      config.headers["X-Guest-Id"] = getGuestId();
+    }
+  } catch {
+    // Supabase unreachable — fall back to guest mode so the app still works
     config.headers["X-Guest-Id"] = getGuestId();
   }
   return config;

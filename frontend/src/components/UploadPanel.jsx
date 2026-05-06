@@ -20,15 +20,17 @@ export default function UploadPanel({ onDocumentsChange }) {
       const docs = data.documents || [];
       setDocuments(docs);
       onDocumentsChange?.(docs);
-    } catch {}
-    finally { setLoadingDocs(false); }
+    } catch (err) {
+      console.error("Failed to load documents:", err);
+      setError("Could not load your documents. Please refresh the page.");
+    } finally { setLoadingDocs(false); }
   };
 
   const handleUpload = async (file) => {
     setUploading(true); setError(null); setSuccess(null); setProgress(0);
     try {
       await uploadDocument(file, (e) =>
-        setProgress(Math.round((e.loaded * 100) / e.total))
+        setProgress(e.total ? Math.round((e.loaded * 100) / e.total) : 0)
       );
       setSuccess(`"${file.name}" indexed successfully!`);
       await fetchDocs(false);

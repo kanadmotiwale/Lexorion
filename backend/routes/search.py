@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import Optional
 
 from auth import get_user_id
-from db.database import get_db, Document
+from db.database import get_db
 from models.schemas import SearchResponse, SearchResult
 from services.retriever import search_index, get_index_stats
 
@@ -34,15 +34,9 @@ def semantic_search(
 
     results = []
     for chunk in chunks:
-        # Filter by file_type if requested
-        if file_type:
-            doc = (
-                db.query(Document)
-                .filter(Document.id == chunk["document_id"], Document.user_id == user_id)
-                .first()
-            )
-            if not doc or doc.file_type != file_type:
-                continue
+        # Filter by file_type using the value already fetched in the search SQL (no extra query)
+        if file_type and chunk.get("file_type") != file_type:
+            continue
 
         results.append(SearchResult(
             document_id = chunk["document_id"],

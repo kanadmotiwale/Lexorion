@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional, List, Any
 from datetime import datetime
 
@@ -21,9 +21,9 @@ class DocumentResponse(BaseModel):
 # --- Chat ---
 
 class ChatRequest(BaseModel):
-    question: str
+    question: str = Field(..., min_length=1, max_length=2000)
     top_k: Optional[int] = 5
-    score_threshold: Optional[float] = 0.75
+    score_threshold: Optional[float] = 0.0   # was 0.75 — aligned with client default
     conversation_id: Optional[str] = None   # pass to continue an existing conversation
 
 

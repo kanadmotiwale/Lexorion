@@ -37,8 +37,10 @@ async def upload_document(
     effective_id = user_id or "anonymous"
 
     file_type = get_file_type(file.filename)
-    content   = await file.read()
 
+    # Read one byte beyond the limit so we can detect oversized files
+    # without loading the entire file into memory first
+    content = await file.read(MAX_FILE_SIZE + 1)
     if len(content) > MAX_FILE_SIZE:
         raise HTTPException(status_code=400, detail="File too large. Max size is 10 MB.")
 
@@ -134,6 +136,8 @@ def delete_document(
     if not doc:
         raise HTTPException(status_code=404, detail="Document not found")
 
+    # Delete all chunks first to avoid orphaned rows
+    db.query(Chunk).filter(Chunk.document_id == document_id).delete()
     db.delete(doc)
     db.commit()
     return {"message": f"Document {document_id} deleted successfully"}

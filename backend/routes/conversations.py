@@ -91,6 +91,8 @@ def delete_conversation(
     if not convo:
         raise HTTPException(status_code=404, detail="Conversation not found")
 
+    # Delete messages first to avoid orphaned rows
+    db.query(Message).filter(Message.conversation_id == conversation_id).delete()
     db.delete(convo)
     db.commit()
     return {"message": "Deleted"}

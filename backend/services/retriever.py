@@ -17,13 +17,17 @@ def search_index(
     query_embedding = embed_query(query)
     embedding_str = "[" + ",".join(str(x) for x in query_embedding) + "]"
 
+    # Always scope to a user — never leak data across users
+    # If user_id is None we return nothing rather than exposing everyone's data
+    if user_id is None:
+        return []
+
     # Build WHERE clauses
     filters = ["1 - (c.embedding <=> CAST(:embedding AS vector)) >= :threshold"]
     params: Dict = {"embedding": embedding_str, "threshold": score_threshold, "top_k": top_k}
 
-    if user_id:
-        filters.append("d.user_id = :user_id")
-        params["user_id"] = user_id
+    filters.append("d.user_id = :user_id")
+    params["user_id"] = user_id
 
     if document_ids:
         filters.append("c.document_id = ANY(:doc_ids)")
@@ -34,7 +38,7 @@ def search_index(
     sql = text(f"""
         SELECT
             c.id, c.document_id, c.chunk_index, c.text, c.token_count,
-            d.filename,
+            d.filename, d.file_type,
             1 - (c.embedding <=> CAST(:embedding AS vector)) AS score
         FROM chunks c
         JOIN documents d ON c.document_id = d.id
@@ -53,6 +57,7 @@ def search_index(
             "text":         row.text,
             "token_count":  row.token_count,
             "filename":     row.filename,
+            "file_type":    row.file_type,
             "score":        float(row.score),
         }
         for row in rows

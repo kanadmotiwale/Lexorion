@@ -70,6 +70,9 @@ class Message(Base):
 
 
 def init_db():
+    # Create all tables that don't already exist
+    Base.metadata.create_all(engine)
+    # Verify the connection is healthy
     with engine.connect() as conn:
         conn.execute(__import__("sqlalchemy").text("SELECT 1"))
 

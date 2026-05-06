@@ -138,11 +138,24 @@ export default function ChatPanel({ conversationId, isGuest, onConversationCreat
     }
   };
 
+  // ── Reset welcome card when user logs out back to guest ────────────────────
+  useEffect(() => {
+    if (isGuest) setShowWelcome(true);
+  }, [isGuest]);
+
   // ── Render ─────────────────────────────────────────────────────────────────
   if (loadingHistory) {
     return (
-      <div style={{ ...s.wrap, alignItems: "center", justifyContent: "center" }}>
-        <div style={{ width: 28, height: 28, border: "3px solid #f0f0f0", borderTopColor: "#250cb3", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
+      <div style={s.wrap}>
+        {/* Skeleton placeholder while conversation history loads */}
+        <div style={s.skeletonWrap}>
+          {[120, 200, 160, 240, 180].map((w, i) => (
+            <div key={i} style={i % 2 === 0 ? s.skeletonAi : s.skeletonUser}>
+              {i % 2 === 0 && <div style={s.skeletonAvatar} />}
+              <div style={{ ...s.skeletonLine, width: w, opacity: 1 - i * 0.08 }} />
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
@@ -326,6 +339,21 @@ if (!document.querySelector("#dot-style")) {
 
 const s = {
   wrap: { display: "flex", flexDirection: "column", height: "100%", background: "#fff" },
+
+  /* Loading skeleton */
+  skeletonWrap: {
+    flex: 1, padding: "32px 28px", display: "flex", flexDirection: "column", gap: 20,
+  },
+  skeletonAi: { display: "flex", alignItems: "center", gap: 12 },
+  skeletonUser: { display: "flex", justifyContent: "flex-end" },
+  skeletonAvatar: {
+    width: 34, height: 34, borderRadius: 10, background: "#f0f0f0", flexShrink: 0,
+    animation: "pulse 1.4s ease infinite",
+  },
+  skeletonLine: {
+    height: 14, borderRadius: 8, background: "#f0f0f0",
+    animation: "pulse 1.4s ease infinite",
+  },
 
   /* Centered empty state */
   hero: {

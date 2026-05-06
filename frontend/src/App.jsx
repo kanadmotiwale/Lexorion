@@ -25,7 +25,14 @@ export default function App() {
     supabase.auth.getSession().then(({ data: { session } }) => setSession(session));
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => {
       setSession(s);
-      if (s) setGuestMode(false);
+      if (s) {
+        setGuestMode(false);
+      } else {
+        // User signed out — go back to guest mode
+        setGuestMode(true);
+        setConversations([]);
+        setActiveConvId(null);
+      }
     });
     return () => subscription.unsubscribe();
   }, []);
@@ -36,7 +43,9 @@ export default function App() {
     try {
       const data = await listConversations();
       setConversations(data.conversations || []);
-    } catch { /* ignore */ }
+    } catch (err) {
+      console.error("Failed to load conversations:", err);
+    }
   }, [session]);
 
   useEffect(() => { refreshConversations(); }, [refreshConversations]);
@@ -66,7 +75,9 @@ export default function App() {
       await deleteConversation(id);
       setConversations((prev) => prev.filter((c) => c.id !== id));
       if (activeConversationId === id) setActiveConvId(null);
-    } catch { /* ignore */ }
+    } catch (err) {
+      console.error("Failed to delete conversation:", err);
+    }
   };
 
   // Called by ChatPanel when the backend creates a new conversation
@@ -192,11 +203,12 @@ export default function App() {
                     <span className="history-item-icon">◆</span>
                     <span className="history-item-title">{c.title}</span>
                   </span>
-                  <span
+                  <button
                     className="history-item-delete"
                     onClick={(e) => handleDeleteConv(e, c.id)}
-                    title="Delete"
-                  >✕</span>
+                    title="Delete conversation"
+                    aria-label="Delete conversation"
+                  >✕</button>
                 </button>
               ))
             ) : (
@@ -287,11 +299,6 @@ const s = {
   userEmail: {
     fontSize: 11, color: "#6b7280",
     overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-  },
-  logoutBtn: {
-    background: "transparent", border: "1px solid #2a2a2a",
-    borderRadius: 6, color: "#6b7280", cursor: "pointer",
-    fontSize: 13, lineHeight: 1, padding: "3px 6px", flexShrink: 0,
   },
   signInPrompt: {
     width: "100%", padding: "8px 10px", background: "transparent",

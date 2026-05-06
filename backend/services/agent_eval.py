@@ -100,8 +100,18 @@ Respond in this exact JSON format only, no extra text:
     if start != -1 and end > start:
         raw = raw[start:end]
 
-    data = json.loads(raw)
-    return EvaluationResult(**data)
+    try:
+        data = json.loads(raw)
+        return EvaluationResult(**data)
+    except (json.JSONDecodeError, ValueError, TypeError, KeyError):
+        # LLM returned malformed JSON — return a safe fallback so chat still works
+        return EvaluationResult(
+            is_answerable=True,
+            overall_confidence=0.5,
+            answer_quality="medium",
+            chunk_relevances=[],
+            suggested_answer_focus=None,
+        )
 
 
 def rerank_chunks(chunks: List[Dict], evaluation: EvaluationResult) -> List[Dict]:
@@ -126,7 +136,17 @@ def run_evaluation_pipeline(
     chunks: List[Dict],
     answer: str
 ) -> Dict:
-    evaluation = evaluate_retrieval(question, chunks, answer)
+    try:
+        evaluation = evaluate_retrieval(question, chunks, answer)
+    except Exception:
+        # If evaluation fails entirely, return chunks as-is with a mid-range confidence
+        evaluation = EvaluationResult(
+            is_answerable=True,
+            overall_confidence=0.5,
+            answer_quality="medium",
+            chunk_relevances=[],
+            suggested_answer_focus=None,
+        )
     reranked_chunks = rerank_chunks(chunks, evaluation)
 
     adjusted_confidence = round(

@@ -5,6 +5,12 @@ from typing import List, Dict
 CHUNK_SIZE    = 512
 CHUNK_OVERLAP = 64
 
+# Guard against infinite loop — overlap must be smaller than chunk size
+if CHUNK_OVERLAP >= CHUNK_SIZE:
+    raise ValueError(
+        f"CHUNK_OVERLAP ({CHUNK_OVERLAP}) must be less than CHUNK_SIZE ({CHUNK_SIZE})"
+    )
+
 # Lazy-load everything — nothing runs at import time
 _encoding        = None
 _embedding_model = None

@@ -96,7 +96,11 @@ def chat(
             conversation_id = convo.id
         else:
             # Touch updated_at so the conversation bubbles to the top
-            convo = db.query(Conversation).filter(Conversation.id == conversation_id).first()
+            # Filter by user_id to prevent cross-user conversation injection
+            convo = db.query(Conversation).filter(
+                Conversation.id == conversation_id,
+                Conversation.user_id == user_id,
+            ).first()
             if convo:
                 convo.updated_at = now
 
