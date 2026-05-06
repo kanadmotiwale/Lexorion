@@ -20,8 +20,6 @@ input, textarea, select, button { font-family: inherit; font-size: inherit; }
 
 textarea:focus, input:focus {
   outline: none;
-  border-color: #d97706 !important;
-  box-shadow: 0 0 0 3px rgba(217,119,6,0.12);
 }
 
 /* Animations */
@@ -309,10 +307,6 @@ textarea:focus, input:focus {
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 
-.chat-input-box:focus-within {
-  border-color: #d97706;
-  box-shadow: 0 0 0 3px rgba(217,119,6,0.1);
-}
 
 .chat-banner {
   max-width: 820px;

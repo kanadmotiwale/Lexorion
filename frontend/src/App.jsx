@@ -138,7 +138,6 @@ export default function App() {
           {isLoggedIn ? (
             <div style={s.userRow}>
               <span style={s.userEmail} title={session.user.email}>{session.user.email}</span>
-              <button style={s.logoutBtn} onClick={handleLogout} title="Sign out">⎋</button>
             </div>
           ) : (
             <button style={s.signInPrompt} onClick={() => { setGuestMode(false); setAuthView("login"); }}>
@@ -250,7 +249,7 @@ const s = {
     display: "flex", alignItems: "center", justifyContent: "center",
     color: "#fff", fontWeight: 800, fontSize: 16, flexShrink: 0,
   },
-  logoText: { flex: 1, fontSize: 21, fontWeight: 800, color: "#f5f5f5", letterSpacing: "-0.5px" },
+  logoText: { flex: 1, fontSize: 24, fontWeight: 800, color: "#f5f5f5", letterSpacing: "-0.5px" },
   closeBtn: {
     background: "transparent", border: "none", color: "#666",
     fontSize: 16, cursor: "pointer", padding: 4, borderRadius: 6, flexShrink: 0,
@@ -315,11 +314,11 @@ const s = {
     padding: "12px 14px", borderTop: "1px solid #2a2a2a", flexShrink: 0,
   },
   signOutBtn: {
-    display: "flex", alignItems: "center", gap: 7,
+    display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
     width: "100%", padding: "9px 12px",
     background: "transparent", border: "1px solid #2a2a2a",
     borderRadius: 8, color: "#9ca3af", fontSize: 12,
-    fontWeight: 500, cursor: "pointer", textAlign: "left",
+    fontWeight: 500, cursor: "pointer", textAlign: "center",
     transition: "border-color 0.15s, color 0.15s",
   },
 };

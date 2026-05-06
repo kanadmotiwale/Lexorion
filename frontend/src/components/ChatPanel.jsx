@@ -288,7 +288,6 @@ export default function ChatPanel({ conversationId, isGuest, onConversationCreat
             </svg>
           </button>
         </div>
-        <p style={s.hint}>Enter to send · Shift+Enter for new line</p>
       </div>
     </div>
   );
@@ -396,7 +395,6 @@ const s = {
     border: "none", cursor: "not-allowed", flexShrink: 0,
     display: "flex", alignItems: "center", justifyContent: "center",
   },
-  hint: { fontSize: 11, color: "#d1d5db", textAlign: "center", marginTop: 8 },
 
   /* Markdown rendering */
   aiText:   { fontSize: 15, lineHeight: "1.75", color: "#111827" },
