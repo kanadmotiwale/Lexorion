@@ -295,8 +295,8 @@ const s = {
   },
   signInPrompt: {
     width: "100%", padding: "8px 10px", background: "transparent",
-    border: "1px solid #2a2a2a", borderRadius: 8,
-    color: "#250cb3", fontSize: 11, fontWeight: 600,
+    border: "1px solid #444", borderRadius: 8,
+    color: "#e5e7eb", fontSize: 11, fontWeight: 600,
     cursor: "pointer", marginBottom: 6, textAlign: "center",
   },
   signInSmall: {
@@ -304,7 +304,7 @@ const s = {
     border: "none", borderRadius: 8, fontSize: 12, fontWeight: 600,
     cursor: "pointer", marginTop: 4,
   },
-  poweredBy: { fontSize: 10, color: "#404040", letterSpacing: "0.02em" },
+  poweredBy: { fontSize: 10, color: "#6b7280", letterSpacing: "0.02em" },
   hamburger: {
     background: "transparent", border: "none", fontSize: 20,
     cursor: "pointer", color: "#374151", padding: 4, flexShrink: 0,

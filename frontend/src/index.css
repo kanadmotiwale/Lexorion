@@ -148,10 +148,9 @@ textarea:focus, input:focus {
 
 .history-item {
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 12px 14px;
+  display: block;
+  padding: 12px 28px;
+  text-align: center;
   border-radius: 8px;
   cursor: pointer;
   color: #e5e7eb;
@@ -174,14 +173,15 @@ textarea:focus, input:focus {
 }
 
 .history-item-body {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 8px;
+  max-width: 100%;
   overflow: hidden;
 }
 
 .history-item-icon {
-  font-size: 16px;
+  font-size: 14px;
   opacity: 0.5;
   flex-shrink: 0;
 }
