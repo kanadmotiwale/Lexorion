@@ -178,7 +178,10 @@ export default function App() {
 
       {/* ── Right panel: conversation history ── */}
       <aside className="history-panel">
-        <div className="history-panel-header">History</div>
+        <div className="history-panel-header">
+          <span className="history-panel-header-dot" />
+          <span className="history-panel-header-label">History</span>
+        </div>
         <div className="history-list">
           {isLoggedIn ? (
             conversations.length > 0 ? (
@@ -189,6 +192,7 @@ export default function App() {
                   onClick={() => handleSelectConv(c.id)}
                   title={c.title}
                 >
+                  <span className="history-item-icon">◆</span>
                   <span className="history-item-title">{c.title}</span>
                   <span
                     className="history-item-delete"
@@ -204,7 +208,7 @@ export default function App() {
             )
           ) : (
             <p className="history-empty">
-              <span style={{ fontSize: 24, display: "block", marginBottom: 10, opacity: 0.5 }}>💬</span>
+              <span style={{ fontSize: 26, display: "block", marginBottom: 10, opacity: 0.3 }}>💬</span>
               Sign in to save<br />your chat history.
               <br /><br />
               <button
@@ -226,11 +230,11 @@ const s = {
     padding: "18px 14px", borderBottom: "1px solid #2a2a2a", flexShrink: 0,
   },
   logoIcon: {
-    width: 30, height: 30, borderRadius: 8, background: "#d97706",
+    width: 34, height: 34, borderRadius: 9, background: "#d97706",
     display: "flex", alignItems: "center", justifyContent: "center",
-    color: "#fff", fontWeight: 800, fontSize: 14, flexShrink: 0,
+    color: "#fff", fontWeight: 800, fontSize: 16, flexShrink: 0,
   },
-  logoText: { flex: 1, fontSize: 17, fontWeight: 700, color: "#f5f5f5", letterSpacing: "-0.3px" },
+  logoText: { flex: 1, fontSize: 21, fontWeight: 800, color: "#f5f5f5", letterSpacing: "-0.5px" },
   closeBtn: {
     background: "transparent", border: "none", color: "#666",
     fontSize: 16, cursor: "pointer", padding: 4, borderRadius: 6, flexShrink: 0,
