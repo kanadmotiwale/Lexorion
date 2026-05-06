@@ -147,6 +147,7 @@ textarea:focus, input:focus {
 }
 
 .history-item {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -188,6 +189,10 @@ textarea:focus, input:focus {
 }
 
 .history-item-delete {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
   background: transparent;
   border: none;
   color: #4b5563;
@@ -195,7 +200,6 @@ textarea:focus, input:focus {
   cursor: pointer;
   padding: 2px 5px;
   border-radius: 4px;
-  flex-shrink: 0;
   opacity: 0;
   transition: opacity 0.1s, color 0.1s;
   line-height: 1;
