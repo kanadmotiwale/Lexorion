@@ -161,9 +161,9 @@ export default function ChatPanel({ conversationId, isGuest, onConversationCreat
       ) : null}
 
       {/* ── Messages (hidden when empty, visible once chat starts) ── */}
-      <div style={{ ...s.messages, display: isEmpty ? "none" : "flex" }}>
+      <div className="chat-messages" style={{ display: isEmpty ? "none" : "flex" }}>
         {messages.map((msg, i) => (
-          <div key={i} className="msg-enter" style={msg.role === "user" ? s.userRow : s.aiRow}>
+          <div key={i} className={`msg-enter ${msg.role === "user" ? "chat-user-row" : "chat-ai-row"}`}>
             {msg.role === "ai" ? (
               <>
                 <div style={s.aiAvatar}>L</div>
@@ -208,7 +208,7 @@ export default function ChatPanel({ conversationId, isGuest, onConversationCreat
                 </div>
               </>
             ) : (
-              <div style={s.userBubble}>
+              <div className="chat-user-bubble">
                 <p style={s.userText}>{msg.text}</p>
               </div>
             )}
@@ -216,7 +216,7 @@ export default function ChatPanel({ conversationId, isGuest, onConversationCreat
         ))}
 
         {loading && (
-          <div style={s.aiRow}>
+          <div className="chat-ai-row">
             <div style={s.aiAvatar}>L</div>
             <div style={s.aiBody}>
               <div style={s.dots}>
@@ -232,21 +232,21 @@ export default function ChatPanel({ conversationId, isGuest, onConversationCreat
       </div>
 
       {/* Input area */}
-      <div style={s.inputWrap}>
+      <div className="chat-input-wrap">
         {isGuest && (
-          <div style={s.guestBanner}>
+          <div className="chat-banner" style={s.guestBanner}>
             💡 You're in guest mode — history won't be saved.
           </div>
         )}
 
         {uploading && (
-          <div style={s.uploadBanner}>
+          <div className="chat-banner" style={s.uploadBanner}>
             <div style={s.uploadSpinner} />
             <span>Indexing "{uploadName}"…</span>
           </div>
         )}
 
-        <div style={s.inputBox}>
+        <div className="chat-input-box">
           <input
             ref={fileRef}
             type="file"
@@ -330,28 +330,12 @@ const s = {
     fontSize: 15, color: "#6b7280", lineHeight: "1.65", maxWidth: 360,
   },
 
-  messages: {
-    flex: 1, overflowY: "auto", padding: "32px 0 16px",
-    display: "flex", flexDirection: "column", gap: 0,
-  },
-  aiRow: {
-    display: "flex", gap: 14, padding: "16px 24px",
-    alignItems: "flex-start", maxWidth: 780, width: "100%", margin: "0 auto",
-  },
   aiAvatar: {
     width: 34, height: 34, borderRadius: 10, background: "#d97706",
     display: "flex", alignItems: "center", justifyContent: "center",
     color: "#fff", fontWeight: 800, fontSize: 14, flexShrink: 0, marginTop: 2,
   },
   aiBody: { flex: 1, minWidth: 0 },
-  userRow: {
-    display: "flex", justifyContent: "flex-end",
-    padding: "12px 24px", maxWidth: 780, width: "100%", margin: "0 auto",
-  },
-  userBubble: {
-    background: "#f4f4f4", borderRadius: 18, borderBottomRightRadius: 4,
-    padding: "12px 16px", maxWidth: "72%",
-  },
   userText: { fontSize: 15, lineHeight: "1.65", color: "#111827", margin: 0 },
   sources: { display: "flex", flexWrap: "wrap", gap: 6, marginTop: 12 },
   sourceChip: {
@@ -369,7 +353,6 @@ const s = {
     width: 7, height: 7, borderRadius: "50%", background: "#d97706",
     animation: "dotBounce 1.2s ease infinite", display: "inline-block",
   },
-  inputWrap: { padding: "12px 24px 20px", background: "#fff", borderTop: "1px solid #f0f0f0" },
   guestBanner: {
     fontSize: 12, color: "#6b7280", background: "#f9fafb",
     border: "1px solid #e5e7eb", borderRadius: 8,
@@ -387,12 +370,6 @@ const s = {
     width: 14, height: 14, borderRadius: "50%",
     border: "2px solid #fde68a", borderTopColor: "#d97706",
     animation: "spin 0.7s linear infinite", flexShrink: 0,
-  },
-  inputBox: {
-    display: "flex", alignItems: "flex-end", gap: 10,
-    background: "#f9fafb", border: "1px solid #e5e7eb",
-    borderRadius: 16, padding: "10px 12px",
-    maxWidth: 780, margin: "0 auto",
   },
   textarea: {
     flex: 1, background: "transparent", border: "none",
