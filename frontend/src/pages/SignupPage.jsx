@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { supabase } from "../lib/supabase";
 
-export default function SignupPage({ onSwitch }) {
+export default function SignupPage({ onSwitch, onGuest }) {
   const [email,    setEmail]    = useState("");
   const [password, setPassword] = useState("");
   const [confirm,  setConfirm]  = useState("");
@@ -127,6 +127,9 @@ export default function SignupPage({ onSwitch }) {
           </button>
         </p>
 
+        <div style={s.divider}><span style={s.dividerText}>or</span></div>
+        <button style={s.guestBtn} onClick={onGuest}>Continue as guest</button>
+
       </div>
     </div>
   );
@@ -200,5 +203,12 @@ const s = {
     background: "transparent", border: "none",
     color: "#d97706", fontWeight: 600, cursor: "pointer",
     fontSize: 13, padding: 0,
+  },
+  divider: { display: "flex", alignItems: "center", gap: 10, marginTop: 20 },
+  dividerText: { fontSize: 12, color: "#9ca3af", flexShrink: 0, padding: "0 4px", background: "#fff" },
+  guestBtn: {
+    width: "100%", padding: "11px", background: "transparent",
+    border: "1px solid #e5e7eb", borderRadius: 10, fontSize: 14,
+    fontWeight: 500, color: "#6b7280", cursor: "pointer", marginTop: 4,
   },
 };

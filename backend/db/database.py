@@ -1,18 +1,16 @@
 import os
 from urllib.parse import quote_plus
-from sqlalchemy import create_engine, Column, String, Integer, DateTime, Text
+from sqlalchemy import create_engine, Column, String, Integer, DateTime, Text, JSON
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from pgvector.sqlalchemy import Vector
 from datetime import datetime
 
-# Build the URL from individual params so special characters in the
-# password are safely percent-encoded and never break URL parsing.
 DB_HOST = os.getenv("DB_HOST", "")
 DB_PORT = os.getenv("DB_PORT", "5432")
 DB_NAME = os.getenv("DB_NAME", "postgres")
 DB_USER = os.getenv("DB_USER", "postgres")
-DB_PASS = quote_plus(os.getenv("DB_PASS", ""))   # encodes @, #, etc.
+DB_PASS = quote_plus(os.getenv("DB_PASS", ""))
 
 DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
@@ -48,8 +46,30 @@ class Chunk(Base):
     created_at  = Column(DateTime(timezone=True), default=datetime.utcnow)
 
 
+class Conversation(Base):
+    __tablename__ = "conversations"
+    __table_args__ = {"extend_existing": True}
+
+    id         = Column(String, primary_key=True)
+    user_id    = Column(String, nullable=False)
+    title      = Column(String, default="New Chat")
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+
+
+class Message(Base):
+    __tablename__ = "messages"
+    __table_args__ = {"extend_existing": True}
+
+    id              = Column(String, primary_key=True)
+    conversation_id = Column(String, nullable=False)
+    role            = Column(String, nullable=False)   # "user" | "assistant"
+    content         = Column(Text, nullable=False)
+    sources         = Column(JSON, default=list)
+    created_at      = Column(DateTime(timezone=True), default=datetime.utcnow)
+
+
 def init_db():
-    # Tables are already created in Supabase — just verify the connection works
     with engine.connect() as conn:
         conn.execute(__import__("sqlalchemy").text("SELECT 1"))
 

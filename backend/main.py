@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
 from db.database import init_db
-from routes import upload, chat, search
+from routes import upload, chat, search, conversations
 
 load_dotenv()
 
@@ -34,9 +34,10 @@ async def startup_event():
     print("🔍 pgvector ready for semantic search")
     print("⚡ Embedding model will load on first request")
 
-app.include_router(upload.router, prefix="/api/v1", tags=["documents"])
-app.include_router(chat.router,   prefix="/api/v1", tags=["chat"])
-app.include_router(search.router, prefix="/api/v1", tags=["search"])
+app.include_router(upload.router,        prefix="/api/v1", tags=["documents"])
+app.include_router(chat.router,          prefix="/api/v1", tags=["chat"])
+app.include_router(search.router,        prefix="/api/v1", tags=["search"])
+app.include_router(conversations.router, prefix="/api/v1", tags=["conversations"])
 
 @app.get("/")
 def root():

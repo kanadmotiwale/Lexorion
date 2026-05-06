@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional, List
+from typing import Optional, List, Any
 from datetime import datetime
 
 
@@ -24,6 +24,7 @@ class ChatRequest(BaseModel):
     question: str
     top_k: Optional[int] = 5
     score_threshold: Optional[float] = 0.75
+    conversation_id: Optional[str] = None   # pass to continue an existing conversation
 
 
 class SourceChunk(BaseModel):
@@ -39,6 +40,7 @@ class ChatResponse(BaseModel):
     sources: List[SourceChunk]
     confidence: float
     model: str
+    conversation_id: Optional[str] = None   # returned so the frontend can track it
 
 
 # --- Search ---
@@ -70,3 +72,24 @@ class SearchResponse(BaseModel):
 class DocumentListResponse(BaseModel):
     documents: List[DocumentResponse]
     total: int
+
+
+# --- Conversations ---
+
+class ConversationOut(BaseModel):
+    id: str
+    title: str
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class MessageOut(BaseModel):
+    role: str
+    content: str
+    sources: Optional[List[Any]] = []
+
+    class Config:
+        from_attributes = True

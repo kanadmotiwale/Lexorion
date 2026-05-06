@@ -8,7 +8,7 @@ const api = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
-// Attach the Supabase JWT to every request automatically
+// Attach the Supabase JWT to every request (skipped silently for guests)
 api.interceptors.request.use(async (config) => {
   const { data: { session } } = await supabase.auth.getSession();
   if (session?.access_token) {
@@ -17,14 +17,19 @@ api.interceptors.request.use(async (config) => {
   return config;
 });
 
+// ── Chat ──────────────────────────────────────────────────────────────────────
+
 export const sendMessage = async (question, options = {}) => {
   const response = await api.post("/chat", {
     question,
-    top_k: options.topK || 5,
+    top_k:           options.topK           || 5,
     score_threshold: options.scoreThreshold || 0.0,
+    conversation_id: options.conversationId || null,
   });
   return response.data;
 };
+
+// ── Documents ─────────────────────────────────────────────────────────────────
 
 export const uploadDocument = async (file, onUploadProgress) => {
   const { data: { session } } = await supabase.auth.getSession();
@@ -50,13 +55,15 @@ export const deleteDocument = async (documentId) => {
   return response.data;
 };
 
+// ── Search ────────────────────────────────────────────────────────────────────
+
 export const semanticSearch = async (query, options = {}) => {
   const response = await api.get("/search", {
     params: {
       query,
-      top_k: options.topK || 5,
+      top_k:           options.topK           || 5,
       score_threshold: options.scoreThreshold || 0.0,
-      file_type: options.fileType || undefined,
+      file_type:       options.fileType       || undefined,
     },
   });
   return response.data;
@@ -64,5 +71,22 @@ export const semanticSearch = async (query, options = {}) => {
 
 export const getIndexStats = async () => {
   const response = await api.get("/search/stats");
+  return response.data;
+};
+
+// ── Conversations ─────────────────────────────────────────────────────────────
+
+export const listConversations = async () => {
+  const response = await api.get("/conversations");
+  return response.data; // { conversations: [...] }
+};
+
+export const getConversationMessages = async (conversationId) => {
+  const response = await api.get(`/conversations/${conversationId}/messages`);
+  return response.data; // { messages: [...] }
+};
+
+export const deleteConversation = async (conversationId) => {
+  const response = await api.delete(`/conversations/${conversationId}`);
   return response.data;
 };

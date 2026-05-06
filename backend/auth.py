@@ -1,37 +1,26 @@
 import base64
 import json
-from fastapi import Header, HTTPException
+from typing import Optional
+from fastapi import Header
 
 
-def get_user_id(authorization: str = Header(None)) -> str:
+def get_user_id(authorization: str = Header(None)) -> Optional[str]:
     """
     FastAPI dependency — extracts the Supabase user ID from the
-    'Authorization: Bearer <token>' header sent by the frontend.
+    'Authorization: Bearer <token>' header.
 
-    Supabase issues signed JWTs; we decode the payload to read the
-    'sub' claim (the user's UUID).  The token was already validated
-    by Supabase Auth when it was issued, so decoding without re-
-    verifying the signature is safe here.
+    Returns None (guest access) if the header is absent or invalid,
+    so every route decides independently how to handle unauthenticated users.
     """
     if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Not authenticated")
+        return None  # Guest / unauthenticated
 
     token = authorization.split(" ", 1)[1]
 
     try:
-        # JWT = header.payload.signature  (all base64url-encoded)
         payload_b64 = token.split(".")[1]
-        # base64url may lack padding — add it back
         payload_b64 += "=" * (4 - len(payload_b64) % 4)
         payload = json.loads(base64.urlsafe_b64decode(payload_b64))
-
-        user_id = payload.get("sub")
-        if not user_id:
-            raise HTTPException(status_code=401, detail="Invalid token: missing sub claim")
-
-        return user_id
-
-    except HTTPException:
-        raise
+        return payload.get("sub") or None
     except Exception:
-        raise HTTPException(status_code=401, detail="Invalid token")
+        return None  # Treat malformed token as guest
