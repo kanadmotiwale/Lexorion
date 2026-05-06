@@ -121,12 +121,6 @@ export default function UploadPanel({ onDocumentsChange }) {
 
         {/* Document list */}
         <div style={s.tableWrap}>
-          <div style={s.tableHead}>
-            <span style={{ flex: 3 }}>Name</span>
-            <span style={{ flex: 1, textAlign: "center" }}>Chunks</span>
-            <span style={{ flex: 1, textAlign: "center" }}>Status</span>
-            <span style={{ flex: 0, width: 40, textAlign: "center" }}></span>
-          </div>
 
           {loadingDocs ? (
             <div style={s.empty}>
@@ -134,38 +128,54 @@ export default function UploadPanel({ onDocumentsChange }) {
             </div>
           ) : documents.length === 0 ? (
             <div style={s.empty}>
-              <p style={{ fontSize: 28, marginBottom: 8 }}>📭</p>
-              <p style={{ fontWeight: 600, color: "#374151", marginBottom: 4 }}>No documents yet</p>
-              <p style={{ fontSize: 13, color: "#9ca3af" }}>Upload your first document above</p>
+              <p style={{ fontSize: 13, color: "#9ca3af" }}>No documents yet. Upload your first file above.</p>
             </div>
           ) : (
-            documents.map((doc) => (
-              <div key={doc.id} style={s.tableRow}>
-                <span style={{ flex: 3, fontSize: 13, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "#111827" }}>
-                  {doc.filename}
-                </span>
-                <span style={{ flex: 1, textAlign: "center", fontSize: 13, color: "#6b7280" }}>
-                  {doc.total_chunks}
-                </span>
-                <span style={{ flex: 1, textAlign: "center" }}>
-                  <span style={statusBadge(doc.status)}>{doc.status}</span>
-                </span>
-                <span style={{ width: 40, textAlign: "center" }}>
-                  <button
-                    style={s.delBtn}
-                    onClick={() => handleDelete(doc.id, doc.filename)}
-                    title="Delete"
+            <table style={s.table}>
+              <thead>
+                <tr>
+                  <th style={{ ...s.th, textAlign: "left" }}>Name</th>
+                  <th style={{ ...s.th, textAlign: "right", width: 80 }}>Chunks</th>
+                  <th style={{ ...s.th, textAlign: "center", width: 110 }}>Status</th>
+                  <th style={{ ...s.th, width: 44 }}></th>
+                </tr>
+              </thead>
+              <tbody>
+                {documents.map((doc) => (
+                  <tr key={doc.id} style={s.tr}
+                    onMouseEnter={e => e.currentTarget.style.background = "#f9fafb"}
+                    onMouseLeave={e => e.currentTarget.style.background = "transparent"}
                   >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-                      stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="3 6 5 6 21 6"/>
-                      <path d="M19 6l-1 14H6L5 6"/>
-                      <path d="M10 11v6M14 11v6"/>
-                    </svg>
-                  </button>
-                </span>
-              </div>
-            ))
+                    <td style={s.tdName}>
+                      <div style={s.fileIcon}>
+                        {doc.filename.endsWith(".pdf") ? "PDF" : doc.filename.endsWith(".md") ? "MD" : "TXT"}
+                      </div>
+                      <span style={s.fileName}>{doc.filename}</span>
+                    </td>
+                    <td style={{ ...s.td, textAlign: "right", color: "#6b7280", fontVariantNumeric: "tabular-nums" }}>
+                      {doc.total_chunks}
+                    </td>
+                    <td style={{ ...s.td, textAlign: "center" }}>
+                      <span style={statusBadge(doc.status)}>{doc.status}</span>
+                    </td>
+                    <td style={{ ...s.td, textAlign: "center" }}>
+                      <button
+                        style={s.delBtn}
+                        onClick={() => handleDelete(doc.id, doc.filename)}
+                        title="Delete"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                          stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="3 6 5 6 21 6"/>
+                          <path d="M19 6l-1 14H6L5 6"/>
+                          <path d="M10 11v6M14 11v6"/>
+                        </svg>
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           )}
         </div>
 
@@ -225,28 +235,46 @@ const s = {
     background: "#fef2f2", border: "1px solid #fecaca", color: "#dc2626",
   },
   tableWrap: {
-    border: "1px solid #e5e7eb", borderRadius: 14, overflow: "hidden",
-    background: "#fff",
+    background: "#fff", borderRadius: 16,
+    border: "1px solid #f0f0f0",
+    overflow: "hidden",
   },
-  tableHead: {
-    display: "flex", padding: "10px 16px",
-    background: "#f9fafb", borderBottom: "1px solid #e5e7eb",
-    fontSize: 11, fontWeight: 600, color: "#9ca3af",
-    textTransform: "uppercase", letterSpacing: "0.06em", gap: 8,
+  table: {
+    width: "100%", borderCollapse: "collapse", tableLayout: "fixed",
   },
-  tableRow: {
-    display: "flex", padding: "14px 16px",
-    borderBottom: "1px solid #f3f4f6",
-    alignItems: "center", gap: 8,
-    transition: "background 0.1s",
+  th: {
+    padding: "11px 16px",
+    fontSize: 11, fontWeight: 700, color: "#9ca3af",
+    textTransform: "uppercase", letterSpacing: "0.07em",
+    background: "#fafafa", borderBottom: "1px solid #f0f0f0",
+  },
+  tr: {
+    transition: "background 0.12s",
+  },
+  td: {
+    padding: "13px 16px", fontSize: 13, color: "#374151", verticalAlign: "middle",
+  },
+  tdName: {
+    padding: "13px 16px", fontSize: 13, verticalAlign: "middle",
+    display: "flex", alignItems: "center", gap: 10,
+    overflow: "hidden",
+  },
+  fileIcon: {
+    flexShrink: 0, fontSize: 9, fontWeight: 800, letterSpacing: "0.03em",
+    padding: "3px 6px", borderRadius: 5,
+    background: "#fff7ed", color: "#92400e", border: "1px solid #fde68a",
+  },
+  fileName: {
+    fontWeight: 500, color: "#111827",
+    overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
   },
   delBtn: {
     background: "transparent", border: "none",
-    color: "#9ca3af", cursor: "pointer", padding: 4,
-    borderRadius: 6, display: "flex", alignItems: "center",
-    justifyContent: "center", transition: "color 0.15s",
+    color: "#d1d5db", cursor: "pointer", padding: 6,
+    borderRadius: 7, display: "flex", alignItems: "center",
+    justifyContent: "center", transition: "color 0.15s, background 0.15s",
   },
   empty: {
-    padding: "48px 24px", textAlign: "center", color: "#9ca3af",
+    padding: "40px 24px", textAlign: "center", color: "#9ca3af",
   },
 };
