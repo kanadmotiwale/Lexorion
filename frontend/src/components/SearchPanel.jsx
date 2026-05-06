@@ -18,7 +18,7 @@ export default function SearchPanel() {
   };
 
   const scoreColor = (score) =>
-    score >= 0.75 ? "#16a34a" : score >= 0.5 ? "#d97706" : "#9ca3af";
+    score >= 0.75 ? "#16a34a" : score >= 0.5 ? "#46dcf0" : "#9ca3af";
 
   return (
     <div style={s.wrap}>
@@ -129,7 +129,7 @@ const s = {
     fontSize: 15, color: "#111827",
   },
   searchBtn: {
-    padding: "8px 18px", background: "#d97706", color: "#fff",
+    padding: "8px 18px", background: "#46dcf0", color: "#fff",
     border: "none", borderRadius: 10, fontSize: 13, fontWeight: 600,
     cursor: "pointer", flexShrink: 0,
   },
@@ -146,7 +146,7 @@ const s = {
   resultsMeta: { display: "flex", alignItems: "center", gap: 6, fontSize: 13 },
   count: { fontWeight: 700, color: "#111827" },
   metaSep: { color: "#9ca3af" },
-  queryLabel: { color: "#d97706", fontWeight: 500 },
+  queryLabel: { color: "#46dcf0", fontWeight: 500 },
 
   cards: { display: "flex", flexDirection: "column", gap: 12 },
   card: {
@@ -160,13 +160,13 @@ const s = {
   },
   cardLeft: { display: "flex", alignItems: "center", gap: 8, flex: 1, overflow: "hidden" },
   filename: {
-    fontSize: 13, fontWeight: 600, color: "#d97706",
+    fontSize: 13, fontWeight: 600, color: "#46dcf0",
     overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
   },
   chunkBadge: {
     fontSize: 10, padding: "2px 8px", borderRadius: 20,
-    background: "#fff7ed", color: "#92400e", fontWeight: 600,
-    border: "1px solid #fde68a", flexShrink: 0,
+    background: "#ecfeff", color: "#0e7490", fontWeight: 600,
+    border: "1px solid #a5f3fc", flexShrink: 0,
   },
   score: { fontSize: 13, fontWeight: 700, flexShrink: 0 },
   cardText: { fontSize: 13, lineHeight: "1.7", color: "#374151", marginBottom: 10 },

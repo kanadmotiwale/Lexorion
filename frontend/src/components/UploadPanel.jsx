@@ -60,8 +60,8 @@ export default function UploadPanel({ onDocumentsChange }) {
         <div
           style={{
             ...s.dropZone,
-            borderColor: dragging ? "#d97706" : "#e5e7eb",
-            background: dragging ? "#fffbeb" : "#fafafa",
+            borderColor: dragging ? "#46dcf0" : "#e5e7eb",
+            background: dragging ? "#ecfeff" : "#fafafa",
           }}
           onClick={() => !uploading && fileRef.current?.click()}
           onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
@@ -90,7 +90,7 @@ export default function UploadPanel({ onDocumentsChange }) {
             <>
               <div style={s.uploadIconWrap}>
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
-                  stroke="#d97706" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  stroke="#46dcf0" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                   <polyline points="17 8 12 3 7 8"/>
                   <line x1="12" y1="3" x2="12" y2="15"/>
@@ -124,7 +124,7 @@ export default function UploadPanel({ onDocumentsChange }) {
 
           {loadingDocs ? (
             <div style={s.empty}>
-              <div style={{ width: 24, height: 24, border: "3px solid #f0f0f0", borderTopColor: "#d97706", borderRadius: "50%", animation: "spin 0.7s linear infinite", margin: "0 auto" }} />
+              <div style={{ width: 24, height: 24, border: "3px solid #f0f0f0", borderTopColor: "#46dcf0", borderRadius: "50%", animation: "spin 0.7s linear infinite", margin: "0 auto" }} />
             </div>
           ) : documents.length === 0 ? (
             <div style={s.empty}>
@@ -186,9 +186,9 @@ export default function UploadPanel({ onDocumentsChange }) {
 
 const statusBadge = (status) => ({
   fontSize: 11, fontWeight: 600, padding: "3px 9px", borderRadius: 20,
-  background: status === "indexed" ? "#f0fdf4" : status === "processing" ? "#fffbeb" : "#fef2f2",
-  color: status === "indexed" ? "#166534" : status === "processing" ? "#92400e" : "#dc2626",
-  border: `1px solid ${status === "indexed" ? "#bbf7d0" : status === "processing" ? "#fde68a" : "#fecaca"}`,
+  background: status === "indexed" ? "#f0fdf4" : status === "processing" ? "#ecfeff" : "#fef2f2",
+  color: status === "indexed" ? "#166534" : status === "processing" ? "#0e7490" : "#dc2626",
+  border: `1px solid ${status === "indexed" ? "#bbf7d0" : status === "processing" ? "#a5f3fc" : "#fecaca"}`,
 });
 
 const s = {
@@ -213,7 +213,7 @@ const s = {
   },
   uploadIconWrap: {
     width: 56, height: 56, borderRadius: 14,
-    background: "#fff7ed", display: "flex",
+    background: "#ecfeff", display: "flex",
     alignItems: "center", justifyContent: "center", marginBottom: 4,
   },
   dropTitle: { fontSize: 15, fontWeight: 600, color: "#111827" },
@@ -221,14 +221,14 @@ const s = {
   formatRow: { display: "flex", gap: 6, marginTop: 4 },
   formatTag: {
     fontSize: 11, padding: "2px 9px", borderRadius: 20,
-    background: "#fff7ed", color: "#92400e",
-    fontWeight: 600, border: "1px solid #fde68a",
+    background: "#ecfeff", color: "#0e7490",
+    fontWeight: 600, border: "1px solid #a5f3fc",
   },
   progressTrack: {
     height: 4, background: "#e5e7eb", borderRadius: 99,
     overflow: "hidden", margin: "10px auto", width: "100%", maxWidth: 320,
   },
-  progressFill: { height: "100%", background: "#d97706", borderRadius: 99, transition: "width 0.2s" },
+  progressFill: { height: "100%", background: "#46dcf0", borderRadius: 99, transition: "width 0.2s" },
   alert: {
     display: "flex", alignItems: "center", gap: 8,
     padding: "12px 16px", borderRadius: 12, fontSize: 13, fontWeight: 500,
@@ -262,7 +262,7 @@ const s = {
   fileIcon: {
     flexShrink: 0, fontSize: 9, fontWeight: 800, letterSpacing: "0.03em",
     padding: "3px 6px", borderRadius: 5,
-    background: "#fff7ed", color: "#92400e", border: "1px solid #fde68a",
+    background: "#ecfeff", color: "#0e7490", border: "1px solid #a5f3fc",
   },
   fileName: {
     fontWeight: 500, color: "#111827",

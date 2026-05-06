@@ -126,7 +126,7 @@ textarea:focus, input:focus {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: #d97706;
+  background: #46dcf0;
   flex-shrink: 0;
 }
 
@@ -153,7 +153,7 @@ textarea:focus, input:focus {
   padding: 10px 12px;
   border-radius: 8px;
   cursor: pointer;
-  color: #d97706;
+  color: #46dcf0;
   font-size: 13px;
   background: transparent;
   transition: background 0.12s, color 0.12s;
@@ -164,12 +164,12 @@ textarea:focus, input:focus {
 
 .history-item:hover {
   background: #2a2a2a;
-  color: #fbbf24;
+  color: #22d3ee;
 }
 
 .history-item.active {
   background: #2a2a2a;
-  color: #fbbf24;
+  color: #22d3ee;
   font-weight: 600;
 }
 
