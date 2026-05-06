@@ -14,10 +14,6 @@ from services.agent_eval import run_evaluation_pipeline
 
 router = APIRouter()
 
-# Guests share a neutral pool of documents
-_GUEST_USER_ID = "_guest_"
-
-
 @router.post("/chat", response_model=ChatResponse)
 def chat(
     request: ChatRequest,
@@ -27,7 +23,8 @@ def chat(
     if not request.question.strip():
         raise HTTPException(status_code=400, detail="Question cannot be empty")
 
-    effective_id = user_id or _GUEST_USER_ID
+    # user_id is a real UUID, guest_<uuid>, or None
+    effective_id = user_id or "anonymous"
 
     # Step 1 — Vector search scoped to this user's documents
     chunks = search_index(

@@ -13,9 +13,6 @@ router = APIRouter()
 ALLOWED_EXTENSIONS = {"pdf", "txt", "md"}
 MAX_FILE_SIZE      = 10 * 1024 * 1024   # 10 MB
 
-# Guests share a neutral document pool
-_GUEST_USER_ID = "_guest_"
-
 
 def get_file_type(filename: str) -> str:
     ext = filename.rsplit(".", 1)[-1].lower()
@@ -35,9 +32,12 @@ async def upload_document(
     db:      Session           = Depends(get_db),
     user_id: Optional[str]    = Depends(get_user_id),
 ):
-    file_type    = get_file_type(file.filename)
-    content      = await file.read()
-    effective_id = user_id or _GUEST_USER_ID
+    # user_id is either a real UUID (logged in), guest_<uuid> (guest with session),
+    # or None (no headers at all — treated as anonymous)
+    effective_id = user_id or "anonymous"
+
+    file_type = get_file_type(file.filename)
+    content   = await file.read()
 
     if len(content) > MAX_FILE_SIZE:
         raise HTTPException(status_code=400, detail="File too large. Max size is 10 MB.")
@@ -88,7 +88,7 @@ def list_documents(
     db:      Session        = Depends(get_db),
     user_id: Optional[str] = Depends(get_user_id),
 ):
-    effective_id = user_id or _GUEST_USER_ID
+    effective_id = user_id or "anonymous"
     documents = (
         db.query(Document)
         .filter(Document.user_id == effective_id)
@@ -106,7 +106,7 @@ def get_document(
     db:          Session        = Depends(get_db),
     user_id:     Optional[str] = Depends(get_user_id),
 ):
-    effective_id = user_id or _GUEST_USER_ID
+    effective_id = user_id or "anonymous"
     doc = (
         db.query(Document)
         .filter(Document.id == document_id, Document.user_id == effective_id)
@@ -125,7 +125,7 @@ def delete_document(
     db:          Session        = Depends(get_db),
     user_id:     Optional[str] = Depends(get_user_id),
 ):
-    effective_id = user_id or _GUEST_USER_ID
+    effective_id = user_id or "anonymous"
     doc = (
         db.query(Document)
         .filter(Document.id == document_id, Document.user_id == effective_id)

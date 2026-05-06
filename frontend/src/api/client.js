@@ -3,16 +3,30 @@ import { supabase } from "../lib/supabase";
 
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1";
 
+// ── Guest session ID ──────────────────────────────────────────────────────────
+// Each browser gets a unique ID stored in localStorage so guest documents
+// are private to that browser session and not shared across all guests.
+function getGuestId() {
+  let id = localStorage.getItem("lexorion_guest_id");
+  if (!id) {
+    id = crypto.randomUUID();
+    localStorage.setItem("lexorion_guest_id", id);
+  }
+  return id;
+}
+
 const api = axios.create({
   baseURL: BASE_URL,
   headers: { "Content-Type": "application/json" },
 });
 
-// Attach the Supabase JWT to every request (skipped silently for guests)
+// Attach JWT for logged-in users, or X-Guest-Id for guests
 api.interceptors.request.use(async (config) => {
   const { data: { session } } = await supabase.auth.getSession();
   if (session?.access_token) {
     config.headers.Authorization = `Bearer ${session.access_token}`;
+  } else {
+    config.headers["X-Guest-Id"] = getGuestId();
   }
   return config;
 });
@@ -38,7 +52,9 @@ export const uploadDocument = async (file, onUploadProgress) => {
   const response = await axios.post(`${BASE_URL}/upload`, formData, {
     headers: {
       "Content-Type": "multipart/form-data",
-      ...(session?.access_token && { Authorization: `Bearer ${session.access_token}` }),
+      ...(session?.access_token
+        ? { Authorization: `Bearer ${session.access_token}` }
+        : { "X-Guest-Id": getGuestId() }),
     },
     onUploadProgress,
   });
@@ -78,12 +94,12 @@ export const getIndexStats = async () => {
 
 export const listConversations = async () => {
   const response = await api.get("/conversations");
-  return response.data; // { conversations: [...] }
+  return response.data;
 };
 
 export const getConversationMessages = async (conversationId) => {
   const response = await api.get(`/conversations/${conversationId}/messages`);
-  return response.data; // { messages: [...] }
+  return response.data;
 };
 
 export const deleteConversation = async (conversationId) => {
