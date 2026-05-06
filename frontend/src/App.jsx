@@ -204,7 +204,7 @@ export default function App() {
             )
           ) : (
             <p className="history-empty">
-              <span style={{ fontSize: 24, display: "block", marginBottom: 10 }}>💬</span>
+              <span style={{ fontSize: 24, display: "block", marginBottom: 10, opacity: 0.5 }}>💬</span>
               Sign in to save<br />your chat history.
               <br /><br />
               <button
@@ -279,7 +279,7 @@ const s = {
   signInSmall: {
     padding: "6px 14px", background: "#d97706", color: "#fff",
     border: "none", borderRadius: 8, fontSize: 12, fontWeight: 600,
-    cursor: "pointer",
+    cursor: "pointer", marginTop: 4,
   },
   poweredBy: { fontSize: 10, color: "#404040", letterSpacing: "0.02em" },
   hamburger: {
