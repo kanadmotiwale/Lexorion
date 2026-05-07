@@ -85,3 +85,9 @@ def warmup():
     from services.etl import get_embedding_model
     get_embedding_model()
     return {"status": "warmed up", "model": "BAAI/bge-small-en-v1.5"}
+
+
+# ── Auth debug (temporary — shows what user_id the server sees for your token) ──
+@app.get("/api/v1/debug/whoami")
+def whoami(user_id: str = __import__("fastapi").Depends(__import__("auth").get_user_id)):
+    return {"user_id": user_id, "authenticated": user_id is not None and not str(user_id).startswith("guest_")}
