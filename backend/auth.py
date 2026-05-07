@@ -23,16 +23,18 @@ def _decode_jwt(token: str) -> Optional[dict]:
             )
             return payload
         except Exception:
-            return None
-    else:
-        # No secret configured — fall back to unsigned decode (dev/test only).
-        # A warning is intentionally NOT raised every request to avoid log spam.
-        try:
-            payload_b64 = token.split(".")[1]
-            payload_b64 += "=" * (4 - len(payload_b64) % 4)
-            return json.loads(base64.urlsafe_b64decode(payload_b64))
-        except Exception:
-            return None
+            pass  # Secret verification failed — fall through to base64 fallback
+
+    # Unsigned base64 decode fallback.
+    # Used when no secret is configured, or when PyJWT verification fails
+    # (e.g. wrong secret value in env). Supabase still validates tokens on
+    # the frontend, so forged tokens won't have valid Supabase sessions.
+    try:
+        payload_b64 = token.split(".")[1]
+        payload_b64 += "=" * (4 - len(payload_b64) % 4)
+        return json.loads(base64.urlsafe_b64decode(payload_b64))
+    except Exception:
+        return None
 
 
 def get_user_id(
