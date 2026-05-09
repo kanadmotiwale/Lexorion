@@ -261,9 +261,9 @@ const s = {
     padding: "18px 14px", borderBottom: "1px solid #2a2a2a", flexShrink: 0,
   },
   logoIcon: {
-    width: 34, height: 34, borderRadius: 9, background: "#111827",
+    width: 34, height: 34, borderRadius: 9, background: "#ffffff",
     display: "flex", alignItems: "center", justifyContent: "center",
-    color: "#fff", fontWeight: 800, fontSize: 16, flexShrink: 0,
+    color: "#111827", fontWeight: 800, fontSize: 16, flexShrink: 0,
   },
   logoText: { flex: 1, fontSize: 24, fontWeight: 800, color: "#f5f5f5", letterSpacing: "-0.5px" },
   closeBtn: {
