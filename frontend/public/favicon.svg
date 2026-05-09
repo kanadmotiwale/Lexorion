@@ -1,7 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
   <rect width="32" height="32" rx="8" fill="#111827"/>
-  <!-- Vertical stroke — 5 px wide, 7 px margin on all sides -->
-  <rect x="7" y="7" width="5" height="18" rx="1.5" fill="white"/>
-  <!-- Horizontal base — same 5 px height, meets vertical at corner -->
-  <rect x="7" y="20" width="18" height="5" rx="1.5" fill="white"/>
+  <text x="16" y="23" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif"
+    font-size="20" font-weight="700" fill="white">L</text>
 </svg>
