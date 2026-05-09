@@ -289,7 +289,7 @@ const s = {
     background: "#2a2a2a", color: "#f5f5f5", fontSize: 13,
     fontWeight: 600, cursor: "pointer", textAlign: "left",
   },
-  sidebarFooter: { padding: "12px 14px", borderTop: "1px solid #2a2a2a", flexShrink: 0, textAlign: "center" },
+  sidebarFooter: { padding: "16px 14px 20px", borderTop: "1px solid #2a2a2a", flexShrink: 0, textAlign: "center" },
   userRow: { display: "flex", alignItems: "center", justifyContent: "center", gap: 6, minWidth: 0 },
   userEmail: {
     fontSize: 13, fontWeight: 500, color: "#ffffff",
@@ -321,9 +321,10 @@ const s = {
   signOutBtn: {
     display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
     width: "100%", padding: "11px 14px",
-    background: "#1f2937", border: "none",
-    borderRadius: 10, color: "#f87171", fontSize: 14,
-    fontWeight: 600, cursor: "pointer", textAlign: "center",
-    transition: "background 0.15s",
+    background: "transparent", border: "1px solid #3f3f3f",
+    borderRadius: 10, color: "#e5e7eb", fontSize: 13,
+    fontWeight: 500, cursor: "pointer", textAlign: "center",
+    transition: "background 0.15s, border-color 0.15s",
+    letterSpacing: "0.01em",
   },
 };
