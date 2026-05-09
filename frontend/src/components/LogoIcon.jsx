@@ -22,10 +22,10 @@ export default function LogoIcon({ size = 34, inverted = false, style }) {
       style={style}
     >
       <rect width="32" height="32" rx="8" fill={bg} />
-      {/* Vertical stroke of the L */}
-      <rect x="8" y="6" width="5" height="20" rx="1" fill={fg} />
-      {/* Horizontal base of the L */}
-      <rect x="8" y="22" width="16" height="4" rx="1" fill={fg} />
+      {/* Vertical stroke — 5 px wide, 7 px margin on all sides */}
+      <rect x="7" y="7" width="5" height="18" rx="1.5" fill={fg} />
+      {/* Horizontal base — same 5 px height, meets vertical at corner */}
+      <rect x="7" y="20" width="18" height="5" rx="1.5" fill={fg} />
     </svg>
   );
 }
