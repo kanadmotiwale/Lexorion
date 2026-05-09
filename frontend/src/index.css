@@ -310,7 +310,7 @@ textarea:focus, input:focus {
 
 .chat-input-box {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   gap: 10px;
   background: #fff;
   border: 1px solid #e2e8f0;
@@ -327,6 +327,9 @@ textarea:focus, input:focus {
   box-shadow: 0 8px 36px rgba(0,0,0,0.13), 0 2px 8px rgba(0,0,0,0.07);
 }
 
+/* Hide scrollbar track — the textarea auto-resizes so the bar is never needed visually */
+.chat-input-box textarea::-webkit-scrollbar { display: none; }
+.chat-input-box textarea { scrollbar-width: none; }
 
 .chat-input-box textarea::placeholder {
   color: #6b7280;
