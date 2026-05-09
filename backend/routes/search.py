@@ -15,7 +15,7 @@ router = APIRouter()
 @router.get("/search", response_model=SearchResponse)
 def semantic_search(
     query:           str           = Query(..., min_length=1),
-    top_k:           int           = Query(5, ge=1, le=20),
+    top_k:           int           = Query(5, ge=1, le=100),
     score_threshold: float         = Query(0.0, ge=0.0, le=1.0),
     file_type:       Optional[str] = Query(None),
     db:              Session       = Depends(get_db),

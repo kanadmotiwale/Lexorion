@@ -34,8 +34,8 @@ export default function SearchPanel() {
     if (!query.trim() || loading) return;
     setLoading(true);
     try {
-      // Fetch up to 50 chunks so grouping covers all documents
-      const data = await semanticSearch(query, { topK: 50 });
+      // Fetch up to 100 chunks so grouping covers all documents
+      const data = await semanticSearch(query, { topK: 100 });
       const grouped = groupByDocument(data.results || []);
       setResults(grouped);
     } catch { setResults([]); }
