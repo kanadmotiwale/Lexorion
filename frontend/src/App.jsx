@@ -97,7 +97,7 @@ export default function App() {
   if (session === undefined) {
     return (
       <div style={{ height: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", background: "#0f0f0f" }}>
-        <div style={{ width: 36, height: 36, border: "3px solid #250cb3", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
+        <div style={{ width: 36, height: 36, border: "3px solid #111827", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
       </div>
     );
   }
@@ -261,7 +261,7 @@ const s = {
     padding: "18px 14px", borderBottom: "1px solid #2a2a2a", flexShrink: 0,
   },
   logoIcon: {
-    width: 34, height: 34, borderRadius: 9, background: "#250cb3",
+    width: 34, height: 34, borderRadius: 9, background: "#111827",
     display: "flex", alignItems: "center", justifyContent: "center",
     color: "#fff", fontWeight: 800, fontSize: 16, flexShrink: 0,
   },
@@ -276,7 +276,7 @@ const s = {
   },
   newChatBtn: {
     width: "100%", padding: "10px 12px",
-    background: "#250cb3", color: "#fff",
+    background: "#111827", color: "#fff",
     border: "none", borderRadius: 8, fontSize: 13,
     fontWeight: 600, cursor: "pointer", textAlign: "left",
     marginBottom: 4,
@@ -307,7 +307,7 @@ const s = {
     cursor: "pointer", marginBottom: 6, textAlign: "center",
   },
   signInSmall: {
-    padding: "6px 14px", background: "#250cb3", color: "#fff",
+    padding: "6px 14px", background: "#111827", color: "#fff",
     border: "none", borderRadius: 8, fontSize: 12, fontWeight: 600,
     cursor: "pointer", marginTop: 4,
   },
@@ -317,7 +317,7 @@ const s = {
     cursor: "pointer", color: "#374151", padding: 4, flexShrink: 0,
   },
   newChatSm: {
-    padding: "6px 12px", background: "#250cb3", color: "#fff",
+    padding: "6px 12px", background: "#111827", color: "#fff",
     border: "none", borderRadius: 8, fontSize: 12, fontWeight: 600,
     cursor: "pointer", flexShrink: 0,
   },
