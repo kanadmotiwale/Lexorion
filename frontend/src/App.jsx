@@ -289,8 +289,11 @@ const s = {
     background: "#2a2a2a", color: "#f5f5f5", fontSize: 13,
     fontWeight: 600, cursor: "pointer", textAlign: "left",
   },
-  sidebarFooter: { padding: "16px 14px 20px", borderTop: "1px solid #2a2a2a", flexShrink: 0, textAlign: "center" },
-  userRow: { display: "flex", alignItems: "center", justifyContent: "center", gap: 6, minWidth: 0 },
+  sidebarFooter: {
+    minHeight: 76, display: "flex", alignItems: "center", justifyContent: "center",
+    padding: "0 14px", borderTop: "1px solid #2a2a2a", flexShrink: 0,
+  },
+  userRow: { display: "flex", alignItems: "center", justifyContent: "center", gap: 6, minWidth: 0, width: "100%" },
   userEmail: {
     fontSize: 13, fontWeight: 500, color: "#ffffff",
     overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
@@ -316,7 +319,8 @@ const s = {
     cursor: "pointer", flexShrink: 0,
   },
   historyFooter: {
-    padding: "12px 14px", borderTop: "1px solid #2a2a2a", flexShrink: 0,
+    minHeight: 76, display: "flex", alignItems: "center",
+    padding: "0 14px", borderTop: "1px solid #2a2a2a", flexShrink: 0,
   },
   signOutBtn: {
     display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
