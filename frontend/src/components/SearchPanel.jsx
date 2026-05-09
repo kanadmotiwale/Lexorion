@@ -1,6 +1,29 @@
 import { useState } from "react";
 import { semanticSearch } from "../api/client";
 
+// Group raw chunks by document filename.
+// Each group keeps the best-scoring chunk's text as the excerpt
+// and records how many chunks matched in total.
+function groupByDocument(chunks) {
+  const map = new Map();
+  for (const chunk of chunks) {
+    const key = chunk.filename;
+    if (!map.has(key)) {
+      map.set(key, { filename: chunk.filename, score: chunk.score, text: chunk.text, matchingChunks: 1 });
+    } else {
+      const existing = map.get(key);
+      existing.matchingChunks += 1;
+      // Keep the highest-scoring chunk's excerpt
+      if (chunk.score > existing.score) {
+        existing.score = chunk.score;
+        existing.text  = chunk.text;
+      }
+    }
+  }
+  // Sort by best score descending
+  return Array.from(map.values()).sort((a, b) => b.score - a.score);
+}
+
 export default function SearchPanel() {
   const [query, setQuery]     = useState("");
   const [results, setResults] = useState([]);
@@ -11,8 +34,10 @@ export default function SearchPanel() {
     if (!query.trim() || loading) return;
     setLoading(true);
     try {
-      const data = await semanticSearch(query, { topK: 5 });
-      setResults(data.results || []);
+      // Fetch up to 50 chunks so grouping covers all documents
+      const data = await semanticSearch(query, { topK: 50 });
+      const grouped = groupByDocument(data.results || []);
+      setResults(grouped);
     } catch { setResults([]); }
     finally { setLoading(false); setSearched(true); }
   };
@@ -71,7 +96,7 @@ export default function SearchPanel() {
 
         {searched && results.length > 0 && (
           <div style={s.resultsMeta}>
-            <span style={s.count}>{results.length} result{results.length !== 1 ? "s" : ""}</span>
+            <span style={s.count}>{results.length} document{results.length !== 1 ? "s" : ""}</span>
             <span style={s.metaSep}>for</span>
             <span style={s.queryLabel}>"{query}"</span>
           </div>
@@ -83,9 +108,11 @@ export default function SearchPanel() {
               <div style={s.cardTop}>
                 <div style={s.cardLeft}>
                   <span style={s.filename}>
-                    {r.filename.length > 28 ? r.filename.slice(0, 28) + "…" : r.filename}
+                    {r.filename.length > 36 ? r.filename.slice(0, 36) + "…" : r.filename}
                   </span>
-                  <span style={s.chunkBadge}>chunk {r.chunk_index}</span>
+                  <span style={s.chunkBadge}>
+                    {r.matchingChunks} chunk{r.matchingChunks !== 1 ? "s" : ""} matched
+                  </span>
                 </div>
                 <span style={{ ...s.score, color: scoreColor(r.score) }}>
                   {(r.score * 100).toFixed(0)}%
@@ -94,7 +121,6 @@ export default function SearchPanel() {
               <p style={s.cardText}>
                 {r.text.slice(0, 300)}{r.text.length > 300 ? "…" : ""}
               </p>
-              <div style={s.cardMeta}>{r.token_count} tokens</div>
             </div>
           ))}
         </div>
