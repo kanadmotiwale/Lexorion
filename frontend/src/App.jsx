@@ -293,7 +293,7 @@ const s = {
   sidebarFooter: { padding: "12px 14px", borderTop: "1px solid #2a2a2a", flexShrink: 0, textAlign: "center" },
   userRow: { display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginBottom: 6, minWidth: 0 },
   userEmail: {
-    fontSize: 11, color: "#6b7280",
+    fontSize: 11, color: "#ffffff",
     overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
   },
   signInPrompt: {
@@ -307,7 +307,7 @@ const s = {
     border: "none", borderRadius: 8, fontSize: 12, fontWeight: 600,
     cursor: "pointer", marginTop: 4,
   },
-  poweredBy: { fontSize: 10, color: "#6b7280", letterSpacing: "0.02em" },
+  poweredBy: { fontSize: 10, color: "#ffffff", letterSpacing: "0.02em" },
   hamburger: {
     background: "transparent", border: "none", fontSize: 20,
     cursor: "pointer", color: "#374151", padding: 4, flexShrink: 0,
@@ -324,7 +324,7 @@ const s = {
     display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
     width: "100%", padding: "9px 12px",
     background: "transparent", border: "1px solid #2a2a2a",
-    borderRadius: 8, color: "#9ca3af", fontSize: 12,
+    borderRadius: 8, color: "#ffffff", fontSize: 12,
     fontWeight: 500, cursor: "pointer", textAlign: "center",
     transition: "border-color 0.15s, color 0.15s",
   },
