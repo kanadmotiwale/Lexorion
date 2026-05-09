@@ -299,8 +299,8 @@ textarea:focus, input:focus {
 
 .chat-input-wrap {
   padding: 12px 28px 20px;
-  background: #fff;
-  border-top: 1px solid #f0f0f0;
+  background: #111827;
+  border-top: none;
   flex-shrink: 0;
 }
 
@@ -308,8 +308,8 @@ textarea:focus, input:focus {
   display: flex;
   align-items: flex-end;
   gap: 10px;
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
+  background: #1f2937;
+  border: 1px solid #374151;
   border-radius: 16px;
   padding: 10px 12px;
   max-width: 820px;
@@ -317,6 +317,15 @@ textarea:focus, input:focus {
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 
+.chat-input-box:focus-within {
+  border-color: #4b5563;
+  box-shadow: 0 0 0 3px rgba(255,255,255,0.04);
+}
+
+
+.chat-input-box textarea::placeholder {
+  color: #6b7280;
+}
 
 .chat-banner {
   max-width: 820px;
