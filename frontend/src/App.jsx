@@ -257,13 +257,15 @@ export default function App() {
 
 const s = {
   brand: {
-    display: "flex", alignItems: "center", gap: 10,
+    display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
     padding: "18px 14px", borderBottom: "1px solid #2a2a2a", flexShrink: 0,
+    position: "relative",
   },
-  logoText: { flex: 1, fontSize: 24, fontWeight: 800, color: "#f5f5f5", letterSpacing: "-0.5px" },
+  logoText: { fontSize: 24, fontWeight: 800, color: "#f5f5f5", letterSpacing: "-0.5px" },
   closeBtn: {
+    position: "absolute", right: 10,
     background: "transparent", border: "none", color: "#666",
-    fontSize: 16, cursor: "pointer", padding: 4, borderRadius: 6, flexShrink: 0,
+    fontSize: 16, cursor: "pointer", padding: 4, borderRadius: 6,
   },
   nav: {
     flex: 1, padding: "12px 10px",
