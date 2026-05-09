@@ -151,7 +151,6 @@ export default function App() {
               Sign in to save history →
             </button>
           )}
-          <div style={s.poweredBy}>Powered by Groq · pgvector</div>
         </div>
       </aside>
 
@@ -233,7 +232,7 @@ export default function App() {
         <div style={s.historyFooter}>
           {isLoggedIn ? (
             <button style={s.signOutBtn} onClick={handleLogout}>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
                 <polyline points="16 17 21 12 16 7"/>
@@ -291,9 +290,9 @@ const s = {
     fontWeight: 600, cursor: "pointer", textAlign: "left",
   },
   sidebarFooter: { padding: "12px 14px", borderTop: "1px solid #2a2a2a", flexShrink: 0, textAlign: "center" },
-  userRow: { display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginBottom: 6, minWidth: 0 },
+  userRow: { display: "flex", alignItems: "center", justifyContent: "center", gap: 6, minWidth: 0 },
   userEmail: {
-    fontSize: 11, color: "#ffffff",
+    fontSize: 13, fontWeight: 500, color: "#ffffff",
     overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
   },
   signInPrompt: {
@@ -307,7 +306,6 @@ const s = {
     border: "none", borderRadius: 8, fontSize: 12, fontWeight: 600,
     cursor: "pointer", marginTop: 4,
   },
-  poweredBy: { fontSize: 10, color: "#ffffff", letterSpacing: "0.02em" },
   hamburger: {
     background: "transparent", border: "none", fontSize: 20,
     cursor: "pointer", color: "#374151", padding: 4, flexShrink: 0,
@@ -321,11 +319,11 @@ const s = {
     padding: "12px 14px", borderTop: "1px solid #2a2a2a", flexShrink: 0,
   },
   signOutBtn: {
-    display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
-    width: "100%", padding: "9px 12px",
-    background: "transparent", border: "1px solid #2a2a2a",
-    borderRadius: 8, color: "#ffffff", fontSize: 12,
-    fontWeight: 500, cursor: "pointer", textAlign: "center",
-    transition: "border-color 0.15s, color 0.15s",
+    display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+    width: "100%", padding: "11px 14px",
+    background: "#1f2937", border: "none",
+    borderRadius: 10, color: "#f87171", fontSize: 14,
+    fontWeight: 600, cursor: "pointer", textAlign: "center",
+    transition: "background 0.15s",
   },
 };
