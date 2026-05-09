@@ -115,7 +115,7 @@ export default function App() {
       <aside className={`sidebar${sidebarOpen ? " open" : ""}`}>
 
         <div style={s.brand}>
-          <LogoIcon size={34} />
+          <LogoIcon size={34} inverted />
           <span style={s.logoText}>Lexorion</span>
           <button className="sidebar-close" style={s.closeBtn} onClick={() => setSidebar(false)}>✕</button>
         </div>
