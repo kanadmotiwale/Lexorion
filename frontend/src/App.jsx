@@ -232,12 +232,6 @@ export default function App() {
         <div style={s.historyFooter}>
           {isLoggedIn ? (
             <button style={s.signOutBtn} onClick={handleLogout}>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                <polyline points="16 17 21 12 16 7"/>
-                <line x1="21" y1="12" x2="9" y2="12"/>
-              </svg>
               Sign out
             </button>
           ) : null}
@@ -329,7 +323,7 @@ const s = {
     width: "100%", padding: "11px 14px",
     background: "transparent", border: "1px solid #3f3f3f",
     borderRadius: 10, color: "#e5e7eb", fontSize: 13,
-    fontWeight: 500, cursor: "pointer", textAlign: "center",
+    fontWeight: 700, cursor: "pointer", textAlign: "center",
     transition: "background 0.15s, border-color 0.15s",
     letterSpacing: "0.01em",
   },
