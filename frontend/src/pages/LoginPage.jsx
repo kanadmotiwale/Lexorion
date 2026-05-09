@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { supabase } from "../lib/supabase";
+import LogoIcon from "../components/LogoIcon";
 
 export default function LoginPage({ onSwitch, onGuest }) {
   const [email,    setEmail]    = useState("");
@@ -25,7 +26,7 @@ export default function LoginPage({ onSwitch, onGuest }) {
 
         {/* Logo */}
         <div style={s.logoRow}>
-          <div style={s.logoIcon}>L</div>
+          <LogoIcon size={36} />
           <span style={s.logoText}>Lexorion</span>
         </div>
 
@@ -118,12 +119,6 @@ const s = {
   logoRow: {
     display: "flex", alignItems: "center",
     gap: 10, marginBottom: 28,
-  },
-  logoIcon: {
-    width: 36, height: 36, borderRadius: 10,
-    background: "#111827", color: "#fff",
-    display: "flex", alignItems: "center", justifyContent: "center",
-    fontWeight: 800, fontSize: 17,
   },
   logoText: { fontSize: 20, fontWeight: 700, color: "#111827" },
   title: { fontSize: 24, fontWeight: 700, color: "#111827", marginBottom: 6 },

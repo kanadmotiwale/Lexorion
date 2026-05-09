@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import { sendMessage, uploadDocument, getConversationMessages } from "../api/client";
+import LogoIcon from "./LogoIcon";
 
 const WELCOME = {
   role: "ai",
@@ -168,7 +169,7 @@ export default function ChatPanel({ conversationId, isGuest, onConversationCreat
       {/* ── Empty / hero state — centered greeting ── */}
       {isEmpty ? (
         <div style={s.hero}>
-          <div style={s.heroAvatar}>L</div>
+          <LogoIcon size={56} style={{ marginBottom: 20, filter: "drop-shadow(0 8px 24px rgba(0,0,0,0.12))" }} />
           <h2 style={s.heroTitle}>Hi, I'm Lexorion</h2>
           <p style={s.heroSub}>Upload your documents and ask me anything about them.</p>
 
@@ -197,7 +198,7 @@ export default function ChatPanel({ conversationId, isGuest, onConversationCreat
           <div key={i} className={`msg-enter ${msg.role === "user" ? "chat-user-row" : "chat-ai-row"}`}>
             {msg.role === "ai" ? (
               <>
-                <div style={s.aiAvatar}>L</div>
+                <LogoIcon size={34} style={{ flexShrink: 0, marginTop: 2 }} />
                 <div style={s.aiBody}>
                   <div style={s.aiText}>
                     <ReactMarkdown
@@ -361,12 +362,6 @@ const s = {
     alignItems: "center", justifyContent: "center",
     padding: "0 24px", textAlign: "center", userSelect: "none",
   },
-  heroAvatar: {
-    width: 56, height: 56, borderRadius: 16, background: "#111827",
-    display: "flex", alignItems: "center", justifyContent: "center",
-    color: "#fff", fontWeight: 800, fontSize: 24, marginBottom: 20,
-    boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
-  },
   heroTitle: {
     fontSize: 26, fontWeight: 700, color: "#111827",
     marginBottom: 10, letterSpacing: "-0.3px",
@@ -407,11 +402,6 @@ const s = {
     textDecoration: "underline", padding: "4px",
   },
 
-  aiAvatar: {
-    width: 34, height: 34, borderRadius: 10, background: "#111827",
-    display: "flex", alignItems: "center", justifyContent: "center",
-    color: "#fff", fontWeight: 800, fontSize: 14, flexShrink: 0, marginTop: 2,
-  },
   aiBody: { flex: 1, minWidth: 0 },
   userText: { fontSize: 15, lineHeight: "1.65", color: "#111827", margin: 0 },
   sources: { display: "flex", flexWrap: "wrap", gap: 6, marginTop: 12 },

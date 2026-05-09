@@ -5,6 +5,7 @@ import SignupPage from "./pages/SignupPage";
 import ChatPanel from "./components/ChatPanel";
 import UploadPanel from "./components/UploadPanel";
 import SearchPanel from "./components/SearchPanel";
+import LogoIcon from "./components/LogoIcon";
 import { listConversations, deleteConversation } from "./api/client";
 
 export default function App() {
@@ -114,7 +115,7 @@ export default function App() {
       <aside className={`sidebar${sidebarOpen ? " open" : ""}`}>
 
         <div style={s.brand}>
-          <div style={s.logoIcon}>L</div>
+          <LogoIcon size={34} />
           <span style={s.logoText}>Lexorion</span>
           <button className="sidebar-close" style={s.closeBtn} onClick={() => setSidebar(false)}>✕</button>
         </div>
@@ -161,7 +162,7 @@ export default function App() {
         <div className="topbar">
           <button style={s.hamburger} onClick={() => setSidebar(true)}>☰</button>
           <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1 }}>
-            <div style={{ ...s.logoIcon, width: 28, height: 28, fontSize: 13 }}>L</div>
+            <LogoIcon size={28} />
             <span style={{ fontSize: 15, fontWeight: 700, color: "#111827" }}>Lexorion</span>
           </div>
           <button style={s.newChatSm} onClick={handleNewChat}>New Chat</button>
@@ -259,11 +260,6 @@ const s = {
   brand: {
     display: "flex", alignItems: "center", gap: 10,
     padding: "18px 14px", borderBottom: "1px solid #2a2a2a", flexShrink: 0,
-  },
-  logoIcon: {
-    width: 34, height: 34, borderRadius: 9, background: "#ffffff",
-    display: "flex", alignItems: "center", justifyContent: "center",
-    color: "#111827", fontWeight: 800, fontSize: 16, flexShrink: 0,
   },
   logoText: { flex: 1, fontSize: 24, fontWeight: 800, color: "#f5f5f5", letterSpacing: "-0.5px" },
   closeBtn: {
