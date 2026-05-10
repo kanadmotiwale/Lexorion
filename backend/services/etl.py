@@ -1,9 +1,9 @@
-import os
 import uuid
 from typing import List, Dict
 
-CHUNK_SIZE    = 512
-CHUNK_OVERLAP = 64
+CHUNK_SIZE      = 512
+CHUNK_OVERLAP   = 64
+EMBED_BATCH_SIZE = 16   # embed in small batches to avoid OOM and CPU spikes
 
 # Guard against infinite loop — overlap must be smaller than chunk size
 if CHUNK_OVERLAP >= CHUNK_SIZE:
@@ -91,9 +91,14 @@ def chunk_text(text: str, document_id: str) -> List[Dict]:
 # ── Embeddings ─────────────────────────────────────────────────────────────────
 
 def embed_texts(texts: List[str]) -> List[List[float]]:
-    model      = get_embedding_model()
-    embeddings = list(model.embed(texts))
-    return [e.tolist() for e in embeddings]
+    """Embed in small batches to avoid memory spikes and CPU timeouts on free tier."""
+    model  = get_embedding_model()
+    result = []
+    for i in range(0, len(texts), EMBED_BATCH_SIZE):
+        batch      = texts[i : i + EMBED_BATCH_SIZE]
+        embeddings = list(model.embed(batch))
+        result.extend(e.tolist() for e in embeddings)
+    return result
 
 
 def embed_query(query: str) -> List[float]:

@@ -1,6 +1,7 @@
 import uuid
 from typing import Optional
 from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
+from fastapi.concurrency import run_in_threadpool
 from sqlalchemy.orm import Session
 
 from auth import get_user_id
@@ -58,7 +59,9 @@ async def upload_document(
     db.commit()
 
     try:
-        chunks = run_etl(content, file_type, document_id)
+        # run_etl is CPU-heavy (PDF parse + ONNX embeddings); run in a thread
+        # pool so FastAPI's async event loop stays unblocked during processing
+        chunks = await run_in_threadpool(run_etl, content, file_type, document_id)
 
         for chunk in chunks:
             db.add(Chunk(
