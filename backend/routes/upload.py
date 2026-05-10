@@ -1,11 +1,10 @@
 import uuid
 from typing import Optional
-from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
-from fastapi.concurrency import run_in_threadpool
+from fastapi import APIRouter, UploadFile, File, HTTPException, Depends, BackgroundTasks
 from sqlalchemy.orm import Session
 
 from auth import get_user_id
-from db.database import get_db, Document, Chunk
+from db.database import get_db, SessionLocal, Document, Chunk
 from models.schemas import DocumentResponse, DocumentListResponse
 from services.etl import run_etl
 
@@ -25,22 +24,52 @@ def get_file_type(filename: str) -> str:
     return ext
 
 
+# ── Background ETL task ────────────────────────────────────────────────────────
+
+def _run_etl_background(content: bytes, file_type: str, document_id: str) -> None:
+    """Runs ETL in a background task with its own DB session so the HTTP
+    response can be returned immediately without blocking on embedding."""
+    db = SessionLocal()
+    try:
+        chunks = run_etl(content, file_type, document_id)
+
+        for chunk in chunks:
+            db.add(Chunk(
+                id          = chunk["id"],
+                document_id = document_id,
+                chunk_index = chunk["chunk_index"],
+                text        = chunk["text"],
+                token_count = chunk["token_count"],
+                embedding   = chunk["embedding"],
+            ))
+
+        doc = db.query(Document).filter(Document.id == document_id).first()
+        if doc:
+            doc.total_chunks = len(chunks)
+            doc.status       = "indexed"
+            db.commit()
+
+    except Exception as e:
+        doc = db.query(Document).filter(Document.id == document_id).first()
+        if doc:
+            doc.status = "failed"
+            db.commit()
+    finally:
+        db.close()
+
+
 # ── Upload ─────────────────────────────────────────────────────────────────────
 
 @router.post("/upload", response_model=DocumentResponse)
 async def upload_document(
-    file:    UploadFile        = File(...),
-    db:      Session           = Depends(get_db),
-    user_id: Optional[str]    = Depends(get_user_id),
+    file:             UploadFile        = File(...),
+    background_tasks: BackgroundTasks   = None,
+    db:               Session           = Depends(get_db),
+    user_id:          Optional[str]     = Depends(get_user_id),
 ):
-    # user_id is either a real UUID (logged in), guest_<uuid> (guest with session),
-    # or None (no headers at all — treated as anonymous)
     effective_id = user_id or "anonymous"
+    file_type    = get_file_type(file.filename)
 
-    file_type = get_file_type(file.filename)
-
-    # Read one byte beyond the limit so we can detect oversized files
-    # without loading the entire file into memory first
     content = await file.read(MAX_FILE_SIZE + 1)
     if len(content) > MAX_FILE_SIZE:
         raise HTTPException(status_code=400, detail="File too large. Max size is 10 MB.")
@@ -57,32 +86,12 @@ async def upload_document(
     )
     db.add(doc)
     db.commit()
-
-    try:
-        # run_etl is CPU-heavy (PDF parse + ONNX embeddings); run in a thread
-        # pool so FastAPI's async event loop stays unblocked during processing
-        chunks = await run_in_threadpool(run_etl, content, file_type, document_id)
-
-        for chunk in chunks:
-            db.add(Chunk(
-                id          = chunk["id"],
-                document_id = document_id,
-                chunk_index = chunk["chunk_index"],
-                text        = chunk["text"],
-                token_count = chunk["token_count"],
-                embedding   = chunk["embedding"],
-            ))
-
-        doc.total_chunks = len(chunks)
-        doc.status       = "indexed"
-        db.commit()
-
-    except Exception as e:
-        doc.status = "failed"
-        db.commit()
-        raise HTTPException(status_code=500, detail=f"ETL pipeline failed: {str(e)}")
-
     db.refresh(doc)
+
+    # Return immediately — ETL (parse + chunk + embed) runs in the background.
+    # The client polls GET /documents/{id} until status → "indexed" | "failed".
+    background_tasks.add_task(_run_etl_background, content, file_type, document_id)
+
     return doc
 
 
@@ -139,7 +148,6 @@ def delete_document(
     if not doc:
         raise HTTPException(status_code=404, detail="Document not found")
 
-    # Delete all chunks first to avoid orphaned rows
     db.query(Chunk).filter(Chunk.document_id == document_id).delete()
     db.delete(doc)
     db.commit()

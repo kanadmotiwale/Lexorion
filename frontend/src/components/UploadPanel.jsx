@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { uploadDocument, listDocuments, deleteDocument } from "../api/client";
+import { uploadDocument, listDocuments, deleteDocument, getDocument } from "../api/client";
 
 export default function UploadPanel({ onDocumentsChange }) {
   const [documents, setDocuments] = useState([]);
@@ -29,11 +29,38 @@ export default function UploadPanel({ onDocumentsChange }) {
   const handleUpload = async (file) => {
     setUploading(true); setError(null); setSuccess(null); setProgress(0);
     try {
-      await uploadDocument(file, (e) =>
+      // Upload file — backend returns immediately with status "processing"
+      const doc = await uploadDocument(file, (e) =>
         setProgress(e.total ? Math.round((e.loaded * 100) / e.total) : 0)
       );
-      setSuccess(`"${file.name}" indexed successfully!`);
+
+      // Refresh list immediately so user sees the "processing" row
       await fetchDocs(false);
+      setProgress(0);
+
+      // Poll every 3 s until the document is indexed or failed
+      await new Promise((resolve) => {
+        const interval = setInterval(async () => {
+          try {
+            const updated = await getDocument(doc.id);
+            if (updated.status === "indexed") {
+              clearInterval(interval);
+              setSuccess(`"${file.name}" indexed successfully!`);
+              await fetchDocs(false);
+              resolve();
+            } else if (updated.status === "failed") {
+              clearInterval(interval);
+              setError(`Processing failed for "${file.name}". Please try again.`);
+              await fetchDocs(false);
+              resolve();
+            }
+          } catch {
+            clearInterval(interval);
+            resolve();
+          }
+        }, 3000);
+      });
+
     } catch (err) {
       setError(err.response?.data?.detail || "Upload failed. Please try again.");
     } finally {
@@ -82,11 +109,11 @@ export default function UploadPanel({ onDocumentsChange }) {
 
           {uploading ? (
             <div style={{ width: "100%", textAlign: "center" }}>
-              <p style={s.dropTitle}>Indexing… {progress}%</p>
+              <p style={s.dropTitle}>{progress < 100 ? `Uploading… ${progress}%` : "Processing…"}</p>
               <div style={s.progressTrack}>
-                <div style={{ ...s.progressFill, width: `${progress}%` }} />
+                <div style={{ ...s.progressFill, width: progress < 100 ? `${progress}%` : "100%", background: progress < 100 ? "#111827" : "#6b7280" }} />
               </div>
-              <p style={s.dropSub}>Parsing, chunking, embedding your document</p>
+              <p style={s.dropSub}>{progress < 100 ? "Sending file to server" : "Parsing, chunking & embedding in background"}</p>
             </div>
           ) : (
             <>
