@@ -82,9 +82,9 @@ def health():
 
 @app.get("/warmup")
 def warmup():
-    from services.etl import get_embedding_model
+    from services.etl import get_embedding_model, HF_MODEL
     get_embedding_model()
-    return {"status": "warmed up", "model": "BAAI/bge-small-en-v1.5"}
+    return {"status": "warmed up", "model": HF_MODEL}
 
 
 # ── Auth debug (temporary — shows what user_id the server sees for your token) ──

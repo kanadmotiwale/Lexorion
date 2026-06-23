@@ -12,3 +12,4 @@ python-dotenv
 tiktoken
 fastembed==0.2.7
 PyJWT
+requests

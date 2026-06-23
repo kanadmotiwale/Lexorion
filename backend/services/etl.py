@@ -1,17 +1,24 @@
+import os
 import uuid
+import time
+import requests
 from typing import List, Dict
 
-CHUNK_SIZE      = 512
-CHUNK_OVERLAP   = 64
-EMBED_BATCH_SIZE = 16   # embed in small batches to avoid OOM and CPU spikes
+CHUNK_SIZE       = 512
+CHUNK_OVERLAP    = 64
+EMBED_BATCH_SIZE = 32
 
-# Guard against infinite loop — overlap must be smaller than chunk size
+# Guard against infinite loop
 if CHUNK_OVERLAP >= CHUNK_SIZE:
     raise ValueError(
         f"CHUNK_OVERLAP ({CHUNK_OVERLAP}) must be less than CHUNK_SIZE ({CHUNK_SIZE})"
     )
 
-# Lazy-load everything — nothing runs at import time
+HF_TOKEN   = os.getenv("HF_TOKEN", "")
+HF_MODEL   = "sentence-transformers/all-MiniLM-L6-v2"   # 384-dim, free, fast
+HF_API_URL = f"https://api-inference.huggingface.co/pipeline/feature-extraction/{HF_MODEL}"
+
+# Lazy-load local model only when HF API is not configured
 _encoding        = None
 _embedding_model = None
 
@@ -28,7 +35,9 @@ def get_embedding_model():
     global _embedding_model
     if _embedding_model is None:
         from fastembed import TextEmbedding
-        _embedding_model = TextEmbedding(model_name="BAAI/bge-small-en-v1.5")
+        # Must match the HF API model (HF_MODEL) so both embedding paths produce
+        # vectors in the same space — mixing them silently breaks similarity search.
+        _embedding_model = TextEmbedding(model_name=HF_MODEL)
     return _embedding_model
 
 
@@ -88,10 +97,45 @@ def chunk_text(text: str, document_id: str) -> List[Dict]:
     return chunks
 
 
-# ── Embeddings ─────────────────────────────────────────────────────────────────
+# ── Embeddings via HuggingFace Inference API ───────────────────────────────────
 
-def embed_texts(texts: List[str]) -> List[List[float]]:
-    """Embed in small batches to avoid memory spikes and CPU timeouts on free tier."""
+def _embed_via_hf_api(texts: List[str]) -> List[List[float]]:
+    """Call HuggingFace Inference API in batches. Free, no local model needed."""
+    headers = {"Authorization": f"Bearer {HF_TOKEN}"}
+    result  = []
+
+    for i in range(0, len(texts), EMBED_BATCH_SIZE):
+        batch   = texts[i : i + EMBED_BATCH_SIZE]
+        payload = {"inputs": batch, "options": {"wait_for_model": True}}
+
+        for attempt in range(3):
+            resp = requests.post(HF_API_URL, headers=headers, json=payload, timeout=60)
+            if resp.status_code == 200:
+                embeddings = resp.json()
+                # HF returns shape [n, seq_len, dim] for feature-extraction — mean-pool
+                for emb in embeddings:
+                    if isinstance(emb[0], list):
+                        # token-level: mean pool across tokens
+                        vec = [sum(tok[d] for tok in emb) / len(emb) for d in range(len(emb[0]))]
+                    else:
+                        vec = emb
+                    result.append(vec)
+                break
+            elif resp.status_code == 503:
+                # Model loading — wait and retry
+                time.sleep(10)
+            else:
+                raise RuntimeError(f"HF API error {resp.status_code}: {resp.text[:200]}")
+        else:
+            raise RuntimeError("HF API unavailable after 3 retries")
+
+    return result
+
+
+# ── Embeddings via local fastembed (fallback) ──────────────────────────────────
+
+def _embed_via_local(texts: List[str]) -> List[List[float]]:
+    """Local ONNX model — works but uses ~250MB RAM, slow on free tier."""
     model  = get_embedding_model()
     result = []
     for i in range(0, len(texts), EMBED_BATCH_SIZE):
@@ -101,13 +145,17 @@ def embed_texts(texts: List[str]) -> List[List[float]]:
     return result
 
 
+def embed_texts(texts: List[str]) -> List[List[float]]:
+    if HF_TOKEN:
+        return _embed_via_hf_api(texts)
+    return _embed_via_local(texts)
+
+
 def embed_query(query: str) -> List[float]:
-    model      = get_embedding_model()
-    embeddings = list(model.embed([query]))
-    return embeddings[0].tolist()
+    return embed_texts([query])[0]
 
 
-# ── Full ETL pipeline (processes from raw bytes — no disk writes needed) ───────
+# ── Full ETL pipeline ──────────────────────────────────────────────────────────
 
 def run_etl(content: bytes, file_type: str, document_id: str) -> List[Dict]:
     raw_text = parse_file_bytes(content, file_type)

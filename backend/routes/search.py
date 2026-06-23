@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import Optional
 
 from auth import get_user_id
-from db.database import get_db
+from db.database import get_db, Document
 from models.schemas import SearchResponse, SearchResult
 from services.retriever import search_index, get_index_stats
 
