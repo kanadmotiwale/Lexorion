@@ -1,4 +1,5 @@
 import uuid
+import logging
 from typing import Optional
 from fastapi import APIRouter, UploadFile, File, HTTPException, Depends, BackgroundTasks
 from sqlalchemy.orm import Session
@@ -9,6 +10,7 @@ from models.schemas import DocumentResponse, DocumentListResponse
 from services.etl import run_etl
 
 router = APIRouter()
+logger = logging.getLogger("lexorion.upload")
 
 ALLOWED_EXTENSIONS = {"pdf", "txt", "md"}
 MAX_FILE_SIZE      = 10 * 1024 * 1024   # 10 MB
@@ -49,7 +51,9 @@ def _run_etl_background(content: bytes, file_type: str, document_id: str) -> Non
             doc.status       = "indexed"
             db.commit()
 
-    except Exception as e:
+    except Exception:
+        logger.exception("ETL failed for document %s", document_id)
+        db.rollback()
         doc = db.query(Document).filter(Document.id == document_id).first()
         if doc:
             doc.status = "failed"

@@ -124,9 +124,9 @@ def rerank_chunks(chunks: List[Dict], evaluation: EvaluationResult) -> List[Dict
     }
 
     for i, chunk in enumerate(chunks):
-        faiss_score = chunk.get("score", 0.0)
+        vector_score = chunk.get("score", 0.0)
         eval_score = relevance_map.get(i, 0.5)
-        chunk["combined_score"] = (faiss_score * 0.5) + (eval_score * 0.5)
+        chunk["combined_score"] = (vector_score * 0.5) + (eval_score * 0.5)
 
     return sorted(chunks, key=lambda x: x["combined_score"], reverse=True)
 

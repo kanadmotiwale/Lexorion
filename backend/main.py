@@ -66,6 +66,9 @@ async def startup_event():
     print("🗄️  Connected to Supabase PostgreSQL")
     print("🔍 pgvector ready for semantic search")
     print("⚡ Embedding model will load on first request")
+    if not (os.getenv("SUPABASE_JWT_SECRET") or os.getenv("SUPABASE_URL")):
+        print("⚠️  Neither SUPABASE_JWT_SECRET nor SUPABASE_URL is set — "
+              "all logged-in tokens will be rejected and users treated as guests")
 
 app.include_router(upload.router,        prefix="/api/v1", tags=["documents"])
 app.include_router(chat.router,          prefix="/api/v1", tags=["chat"])
@@ -85,9 +88,3 @@ def warmup():
     from services.etl import get_embedding_model, HF_MODEL
     get_embedding_model()
     return {"status": "warmed up", "model": HF_MODEL}
-
-
-# ── Auth debug (temporary — shows what user_id the server sees for your token) ──
-@app.get("/api/v1/debug/whoami")
-def whoami(user_id: str = __import__("fastapi").Depends(__import__("auth").get_user_id)):
-    return {"user_id": user_id, "authenticated": user_id is not None and not str(user_id).startswith("guest_")}

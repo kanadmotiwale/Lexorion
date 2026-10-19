@@ -1,39 +1,53 @@
 import os
-import base64
-import json
+import logging
 from typing import Optional
 from fastapi import Header
 
-# Load the Supabase JWT secret for signature verification.
-# Without this, tokens are decoded but NOT verified — only acceptable in local dev.
-_JWT_SECRET = os.getenv("SUPABASE_JWT_SECRET")
+logger = logging.getLogger("lexorion.auth")
+
+# Supabase signs access tokens either with a shared secret (HS256, legacy projects)
+# or with an asymmetric key (ES256/RS256, newer projects) published via JWKS.
+# Tokens are ALWAYS verified — an unverifiable token is treated as "no token".
+_JWT_SECRET   = os.getenv("SUPABASE_JWT_SECRET")
+_SUPABASE_URL = os.getenv("SUPABASE_URL", "").rstrip("/")
+
+_jwks_client = None
+
+
+def _get_jwks_client():
+    global _jwks_client
+    if _jwks_client is None and _SUPABASE_URL:
+        import jwt
+        _jwks_client = jwt.PyJWKClient(f"{_SUPABASE_URL}/auth/v1/.well-known/jwks.json")
+    return _jwks_client
 
 
 def _decode_jwt(token: str) -> Optional[dict]:
-    """Decode and verify a Supabase JWT. Returns payload dict or None on failure."""
-    if _JWT_SECRET:
-        try:
-            import jwt  # PyJWT
-            # Supabase JWTs are HS256-signed; audience claim is not always present.
-            payload = jwt.decode(
-                token,
-                _JWT_SECRET,
-                algorithms=["HS256"],
-                options={"verify_aud": False},
-            )
-            return payload
-        except Exception:
-            pass  # Secret verification failed — fall through to base64 fallback
-
-    # Unsigned base64 decode fallback.
-    # Used when no secret is configured, or when PyJWT verification fails
-    # (e.g. wrong secret value in env). Supabase still validates tokens on
-    # the frontend, so forged tokens won't have valid Supabase sessions.
+    """Verify a Supabase JWT. Returns the payload dict, or None if it can't be verified."""
+    import jwt
     try:
-        payload_b64 = token.split(".")[1]
-        payload_b64 += "=" * (4 - len(payload_b64) % 4)
-        return json.loads(base64.urlsafe_b64decode(payload_b64))
-    except Exception:
+        alg = jwt.get_unverified_header(token).get("alg")
+
+        if alg == "HS256" and _JWT_SECRET:
+            key = _JWT_SECRET
+        elif alg in ("ES256", "RS256") and _get_jwks_client():
+            key = _get_jwks_client().get_signing_key_from_jwt(token).key
+        else:
+            logger.warning(
+                "Cannot verify JWT with alg=%s — set SUPABASE_JWT_SECRET (HS256) "
+                "or SUPABASE_URL (ES256/RS256).", alg,
+            )
+            return None
+
+        return jwt.decode(
+            token,
+            key,
+            algorithms=[alg],
+            audience="authenticated",
+            options={"require": ["exp", "sub"]},
+        )
+    except Exception as exc:
+        logger.warning("JWT rejected: %s", exc)
         return None
 
 
@@ -45,18 +59,16 @@ def get_user_id(
     FastAPI dependency — returns the effective user ID for the request.
 
     Priority:
-    1. Valid Supabase JWT → returns the UUID (sub claim)
-    2. X-Guest-Id header  → returns 'guest_<uuid>' (per-browser isolation)
-    3. Neither present    → returns None (treated as anonymous guest)
+    1. Verified Supabase JWT → returns the UUID (sub claim)
+    2. X-Guest-Id header     → returns 'guest_<uuid>' (per-browser isolation)
+    3. Neither present       → returns None (treated as anonymous guest)
     """
     # ── Logged-in user ────────────────────────────────────────────────────────
     if authorization and authorization.startswith("Bearer "):
         token   = authorization.split(" ", 1)[1]
         payload = _decode_jwt(token)
         if payload:
-            user_id = payload.get("sub")
-            if user_id:
-                return user_id
+            return payload["sub"]
 
     # ── Guest with unique session ID ──────────────────────────────────────────
     if x_guest_id:
