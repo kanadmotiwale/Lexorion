@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends, Query
 from sqlalchemy.orm import Session
-from typing import Optional
+from typing import Optional, Literal
 
 from auth import get_user_id
 from db.database import get_db, Document
@@ -18,15 +18,20 @@ def semantic_search(
     top_k:           int           = Query(5, ge=1, le=100),
     score_threshold: float         = Query(0.0, ge=0.0, le=1.0),
     file_type:       Optional[str] = Query(None),
+    mode:            Literal["hybrid", "vector"] = Query("hybrid"),
     db:              Session       = Depends(get_db),
     user_id:         str           = Depends(get_user_id),
 ):
+    # file_type is filtered inside the SQL (before LIMIT) so top_k results aren't
+    # silently thinned out by a post-hoc filter.
     chunks = search_index(
         query=query,
         db=db,
         top_k=top_k,
         score_threshold=score_threshold,
         user_id=user_id,
+        file_type=file_type,
+        mode=mode,
     )
 
     if not chunks:
@@ -34,10 +39,6 @@ def semantic_search(
 
     results = []
     for chunk in chunks:
-        # Filter by file_type using the value already fetched in the search SQL (no extra query)
-        if file_type and chunk.get("file_type") != file_type:
-            continue
-
         results.append(SearchResult(
             document_id = chunk["document_id"],
             filename    = chunk["filename"],

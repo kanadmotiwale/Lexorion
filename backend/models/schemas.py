@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional, List, Any
+from typing import Optional, List, Any, Literal
 from datetime import datetime
 
 
@@ -25,6 +25,7 @@ class ChatRequest(BaseModel):
     top_k: Optional[int] = 5
     score_threshold: Optional[float] = 0.0   # was 0.75 — aligned with client default
     conversation_id: Optional[str] = None   # pass to continue an existing conversation
+    mode: Literal["hybrid", "vector"] = "hybrid"   # retrieval strategy
 
 
 class SourceChunk(BaseModel):

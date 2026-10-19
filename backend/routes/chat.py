@@ -33,6 +33,7 @@ def chat(
         top_k=request.top_k,
         score_threshold=request.score_threshold,
         user_id=effective_id,
+        mode=request.mode,
     )
 
     if not chunks:

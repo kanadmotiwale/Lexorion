@@ -1,10 +1,13 @@
 import os
+import logging
 from urllib.parse import quote_plus
-from sqlalchemy import create_engine, Column, String, Integer, DateTime, Text, JSON
+from sqlalchemy import create_engine, text, Column, String, Integer, DateTime, Text, JSON
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from pgvector.sqlalchemy import Vector
 from datetime import datetime
+
+logger = logging.getLogger("lexorion.db")
 
 DB_HOST = os.getenv("DB_HOST", "")
 DB_PORT = os.getenv("DB_PORT", "5432")
@@ -69,12 +72,40 @@ class Message(Base):
     created_at      = Column(DateTime(timezone=True), default=datetime.utcnow)
 
 
+# Idempotent DDL applied at startup. Each statement runs in its own transaction so
+# one failure (e.g. an older pgvector without HNSW) never blocks the app from booting.
+_INDEX_DDL = [
+    # Full-text column kept in sync automatically by Postgres (hybrid search, keyword side)
+    "ALTER TABLE chunks ADD COLUMN IF NOT EXISTS tsv tsvector "
+    "GENERATED ALWAYS AS (to_tsvector('english', text)) STORED",
+    "CREATE INDEX IF NOT EXISTS chunks_tsv_idx ON chunks USING GIN (tsv)",
+    # Approximate nearest-neighbour index (vector side) — needs pgvector >= 0.5
+    "CREATE INDEX IF NOT EXISTS chunks_embedding_hnsw_idx "
+    "ON chunks USING hnsw (embedding vector_cosine_ops)",
+    "CREATE INDEX IF NOT EXISTS chunks_document_id_idx ON chunks (document_id)",
+    "CREATE INDEX IF NOT EXISTS documents_user_id_idx ON documents (user_id)",
+    "CREATE INDEX IF NOT EXISTS messages_conversation_id_idx ON messages (conversation_id)",
+    "CREATE INDEX IF NOT EXISTS conversations_user_id_idx ON conversations (user_id)",
+]
+
+
 def init_db():
+    with engine.begin() as conn:
+        conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
+
     # Create all tables that don't already exist
     Base.metadata.create_all(engine)
+
+    for ddl in _INDEX_DDL:
+        try:
+            with engine.begin() as conn:
+                conn.execute(text(ddl))
+        except Exception as exc:
+            logger.warning("Skipped DDL (%s): %s", ddl[:60], exc)
+
     # Verify the connection is healthy
     with engine.connect() as conn:
-        conn.execute(__import__("sqlalchemy").text("SELECT 1"))
+        conn.execute(text("SELECT 1"))
 
 
 def get_db():
