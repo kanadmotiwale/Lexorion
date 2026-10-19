@@ -11,8 +11,6 @@ export default function UploadPanel({ onDocumentsChange }) {
   const [dragging, setDragging]    = useState(false);
   const fileRef = useRef(null);
 
-  useEffect(() => { fetchDocs(); }, []);
-
   const fetchDocs = async (showSpinner = true) => {
     if (showSpinner) setLoadingDocs(true);
     try {
@@ -25,6 +23,10 @@ export default function UploadPanel({ onDocumentsChange }) {
       setError("Could not load your documents. Please refresh the page.");
     } finally { setLoadingDocs(false); }
   };
+
+  // Load once on mount; fetchDocs is intentionally not a dependency (it is recreated each render).
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { fetchDocs(); }, []);
 
   const handleUpload = async (file) => {
     setUploading(true); setError(null); setSuccess(null); setProgress(0);

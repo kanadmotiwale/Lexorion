@@ -90,8 +90,12 @@ _INDEX_DDL = [
 
 
 def init_db():
-    with engine.begin() as conn:
-        conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
+    try:
+        with engine.begin() as conn:
+            conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
+    except Exception as exc:
+        # Usually already enabled (Supabase: Database → Extensions); don't block startup
+        logger.warning("Could not ensure pgvector extension: %s", exc)
 
     # Create all tables that don't already exist
     Base.metadata.create_all(engine)

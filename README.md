@@ -46,7 +46,11 @@ lexorion/
 │   │   ├── rag_chain.py        # prompt building + Groq generation
 │   │   └── agent_eval.py       # LLM evaluation, re-ranking, confidence
 │   ├── models/schemas.py       # Pydantic request/response models
-│   └── db/database.py          # SQLAlchemy models, startup DDL and indexes
+│   ├── db/database.py          # SQLAlchemy models, startup DDL and indexes
+│   ├── tests/                  # pytest suite (all external services mocked)
+│   └── Dockerfile
+├── docker-compose.yml          # local Postgres (pgvector) + API
+├── .github/workflows/ci.yml    # backend tests + frontend lint/build
 ├── frontend/src/
 │   ├── App.jsx
 │   ├── api/client.js
@@ -113,6 +117,31 @@ pnpm dev
 ```
 
 Open `http://localhost:5173`.
+
+### Or run the backend with Docker
+
+No Supabase project needed for guest mode — `docker compose` starts Postgres with pgvector and the API together:
+
+```bash
+cp backend/.env.example backend/.env    # add your GROQ_API_KEY
+docker compose up --build
+```
+
+The API is at `http://localhost:8000`. Start the frontend with `pnpm dev` as above.
+
+---
+
+## Testing
+
+```bash
+cd backend
+pip install -r requirements-dev.txt
+pytest
+```
+
+The backend suite covers auth (forged, expired and unsigned tokens), chunking and embedding backends, prompt building, evaluation and re-ranking, retrieval (including the hybrid → vector fallback), and the HTTP routes. Everything external — the database, Groq, HuggingFace — is mocked, so no keys or services are needed.
+
+The frontend is checked with `pnpm lint` and `pnpm build`. GitHub Actions runs both suites on every push and pull request (`.github/workflows/ci.yml`).
 
 ---
 

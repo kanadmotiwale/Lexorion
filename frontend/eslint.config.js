@@ -17,5 +17,10 @@ export default defineConfig([
       globals: globals.browser,
       parserOptions: { ecmaFeatures: { jsx: true } },
     },
+    rules: {
+      // Resetting/loading state when a prop changes or a session arrives is intentional
+      // in this app; the rule flags every such effect.
+      'react-hooks/set-state-in-effect': 'off',
+    },
   },
 ])

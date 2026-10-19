@@ -1,0 +1,44 @@
+# Local development stack: Postgres with pgvector + the API.
+# Run the frontend separately with `cd frontend && pnpm dev`.
+#
+#   cp backend/.env.example backend/.env   # then add GROQ_API_KEY (and optionally HF_TOKEN)
+#   docker compose up --build
+#
+# The API is then at http://localhost:8000 — guest mode works without Supabase.
+
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backend:
+    build: ./backend
+    env_file:
+      - ./backend/.env
+    environment:
+      # Override whatever backend/.env says so the API talks to the local database
+      DB_HOST: db
+      DB_PORT: "5432"
+      DB_NAME: postgres
+      DB_USER: postgres
+      DB_PASS: postgres
+      FRONTEND_URL: http://localhost:5173
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:

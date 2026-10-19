@@ -10,7 +10,7 @@ const WELCOME = {
   confidence: null,
 };
 
-export default function ChatPanel({ conversationId, isGuest, onConversationCreated, onUploadClick, onRequestAuth }) {
+export default function ChatPanel({ conversationId, isGuest, onConversationCreated, onRequestAuth }) {
   const [messages, setMessages]             = useState([WELCOME]);
   const [input, setInput]                   = useState("");
   const [loading, setLoading]               = useState(false);
